@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Chiron_GoRound_TC, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Nav from "./_components/Nav";
 
 const chironGoRoundTC = Chiron_GoRound_TC({
   variable: "--font-chiron",
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="en"
       className={`${chironGoRoundTC.variable} ${geistMono.variable} font-sans h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Nav />
+        {children}
+      </body>
     </html>
   );
 }
