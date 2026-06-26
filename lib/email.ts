@@ -62,7 +62,7 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
               <hr style="border:none;border-top:1px dashed rgba(3,25,38,0.12);margin:0 0 28px;" />
 
               <p style="margin:0;font-size:12px;color:#031926;opacity:0.4;line-height:1.8;">
-                Vous recevez cet e-mail car vous vous êtes inscrit sur chezjambescourtes.fr.<br />
+                Vous recevez cet e-mail car vous vous êtes inscrit sur chezjambescourtes.com.<br />
                 Pour vous désabonner :
                 <a href="${unsubscribeUrl}" style="color:#031926;opacity:0.6;text-decoration:underline;">cliquez ici</a>.<br />
                 <span style="font-size:11px;">如需退訂，請

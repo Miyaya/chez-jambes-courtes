@@ -7,6 +7,7 @@ const chironGoRoundTC = Chiron_GoRound_TC({
   variable: "--font-chiron",
   subsets: ["latin"],
   weight: "variable",
+  adjustFontFallback: false,
 });
 
 const geistMono = Geist_Mono({
