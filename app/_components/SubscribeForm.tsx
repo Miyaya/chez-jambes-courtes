@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { subscribeAction } from '@/app/actions'
 
 const inputClass =
@@ -10,6 +11,7 @@ const labelClass =
   'block text-[0.72rem] uppercase tracking-[0.12em] text-midnight/60 mb-1.5 font-medium'
 
 export default function SubscribeForm() {
+  const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
@@ -28,11 +30,18 @@ export default function SubscribeForm() {
     setServerError(null)
 
     const result = await subscribeAction(email, name)
-    // Success path calls redirect() on the server — we only reach here on error
+
+    if (result.data === 'subscribed') {
+      router.push('/merci')
+      return
+    }
+
     if (result.error === 'already_subscribed') {
       setServerError('Cette adresse est déjà inscrite · 此信箱已訂閱')
+    } else if (result.error === 'email_failed') {
+      setServerError(`Inscription réussie mais l'e-mail a échoué · 訂閱成功但確認信發送失敗${result.detail ? ` (${result.detail})` : ''}`)
     } else {
-      setServerError('Une erreur est survenue, veuillez réessayer · 發生錯誤，請再試一次')
+      setServerError(`Une erreur est survenue · 發生錯誤${result.detail ? ` (${result.detail})` : ''}`)
     }
     setLoading(false)
   }
