@@ -1,0 +1,36 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "chez-jambes-courtes",
+  "compatibility_date": "2026-06-25",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "routes": [
+    { "pattern": "chezjambescourtes.com", "custom_domain": true },
+    { "pattern": "www.chezjambescourtes.com", "custom_domain": true }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_APP_URL": "https://chezjambescourtes.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://lfyyvedsgztimpmgmcau.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_wZ3P5IuCylF7JvCcRnwrQA_IU2JBrGJ",
+    "RESEND_FROM": "Chez Jambes Courtes <hello@chezjambescourtes.com>"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "chez-jambes-courtes",
+      "environment": "production"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/browser'
 
@@ -14,7 +15,7 @@ function GoogleIcon() {
   )
 }
 
-export default function ConnexionPage() {
+function ConnexionForm() {
   const searchParams = useSearchParams()
   const hasError = searchParams.get('error') === 'auth'
 
@@ -71,5 +72,13 @@ export default function ConnexionPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+export default function ConnexionPage() {
+  return (
+    <Suspense>
+      <ConnexionForm />
+    </Suspense>
   )
 }
