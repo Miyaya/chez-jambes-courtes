@@ -19,7 +19,7 @@ export async function subscribeAction(email: string, name: string): Promise<Subs
   const { error: dbError } = await supabase.from('subscribers').insert({
     email: cleanEmail,
     name: cleanName,
-    source: 0,
+    source: 'prelaunch',
     active: true,
   })
 
