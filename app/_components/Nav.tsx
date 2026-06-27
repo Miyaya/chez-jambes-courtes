@@ -2,7 +2,27 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
 import { useCart } from './CartProvider'
+import { createClient } from '@/lib/supabase/browser'
+
+function UserIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="w-5 h-5"
+      aria-hidden="true"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
 
 function CartIcon() {
   return (
@@ -25,7 +45,17 @@ function CartIcon() {
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
   const { cartTotal, openCart } = useCart()
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   useEffect(() => {
     const el = document.scrollingElement ?? document.documentElement
@@ -71,6 +101,14 @@ export default function Nav() {
             }`}
           >
             預購
+          </Link>
+
+          <Link
+            href={user ? '/compte' : '/connexion'}
+            className={`transition-colors duration-300 ${isScrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
+            aria-label={user ? 'Mon compte · 我的帳號' : 'Se connecter · 登入'}
+          >
+            <UserIcon />
           </Link>
 
           {/* Cart icon — animation target, queried via data-cart-icon */}

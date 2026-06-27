@@ -203,8 +203,11 @@ function ProductCard({
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       className="flex flex-col sm:flex-row bg-white border border-midnight/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
       onClick={onSelect}
+      onKeyDown={e => e.key === 'Enter' && onSelect()}
     >
       {/* Image — full-width on mobile (col), fixed-width on sm+ (row) */}
       <div className="relative h-44 w-full sm:h-auto sm:w-44 shrink-0">
@@ -243,20 +246,20 @@ function ProductCard({
 
         {/* Qty toggle — own row */}
         <div
-          className="flex items-center gap-1.5 mt-2"
+          className="flex items-center gap-3 sm:gap-1.5 mt-3 sm:mt-2"
           onClick={e => e.stopPropagation()}
         >
           <button
             onClick={() => setQty(q => Math.max(1, q - 1))}
-            className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors"
+            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors [touch-action:manipulation]"
           >
             −
           </button>
-          <span className="w-5 text-center text-sm font-bold text-midnight tabular-nums">{qty}</span>
+          <span className="w-6 sm:w-5 text-center text-base sm:text-sm font-bold text-midnight tabular-nums">{qty}</span>
           <button
             onClick={() => setQty(q => Math.min(maxAdditional, q + 1))}
             disabled={qty >= maxAdditional}
-            className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed [touch-action:manipulation]"
           >
             +
           </button>
@@ -270,7 +273,7 @@ function ProductCard({
           ref={addBtnRef}
           onClick={handleAdd}
           disabled={maxAdditional <= 0}
-          className="mt-2 w-full bg-midnight text-orange text-[0.65rem] font-bold uppercase tracking-wide py-1.5 rounded-lg hover:bg-orange hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="mt-3 sm:mt-2 w-full bg-midnight text-orange text-sm sm:text-[0.65rem] font-bold uppercase tracking-wide py-3 sm:py-1.5 rounded-lg hover:bg-orange hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed [touch-action:manipulation]"
         >
           {maxAdditional <= 0 ? '已售完' : 'Ajouter'}
         </button>
@@ -309,7 +312,7 @@ export default function ShopClient({ products, hero }: { products: PublicProduct
       )}
 
       {/* Product grid */}
-      <section className="px-6 py-12 max-w-3xl mx-auto">
+      <section className="px-2 sm:px-6 py-12 max-w-3xl mx-auto w-full">
         {products.length === 0 ? (
           <p className="text-midnight/30 text-center text-sm tracking-widest uppercase py-24">
             Aucun produit disponible · 目前無商品

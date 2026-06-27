@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { useCart } from './CartProvider'
 
 function centsToEur(cents: number) {
@@ -10,6 +11,26 @@ function centsToEur(cents: number) {
 export default function CartPanel() {
   const { cart, products, removeFromCart, updateQty, isCartOpen, closeCart } = useCart()
 
+  // rendered: panel exists in DOM; visible: CSS transition "open" state
+  const [rendered, setRendered] = useState(false)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    if (isCartOpen) {
+      setRendered(true)
+      // Defer one frame so the browser paints the panel before we trigger the transition
+      const raf = requestAnimationFrame(() => setVisible(true))
+      return () => cancelAnimationFrame(raf)
+    } else {
+      setVisible(false)
+      // Unmount after the CSS transition (300ms) finishes
+      const t = setTimeout(() => setRendered(false), 300)
+      return () => clearTimeout(t)
+    }
+  }, [isCartOpen])
+
+  if (!rendered) return null
+
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
 
@@ -18,7 +39,7 @@ export default function CartPanel() {
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-40 bg-midnight/40 backdrop-blur-sm transition-opacity duration-300 ${
-          isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          visible ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={closeCart}
       />
@@ -26,7 +47,7 @@ export default function CartPanel() {
       {/* Panel */}
       <div
         className={`fixed right-0 top-[58px] h-[calc(100vh-58px)] w-full sm:w-[400px] bg-white border-l border-midnight/10 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
-          isCartOpen ? 'translate-x-0' : 'translate-x-full'
+          visible ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
         {/* Header */}
@@ -53,7 +74,7 @@ export default function CartPanel() {
               if (!p) return null
               const maxQty = p.stock_quantity != null ? p.stock_quantity : Infinity
               return (
-                <div key={id} className="flex items-center gap-3 py-4 border-b border-midnight/8">
+                <div key={id} className="flex items-center gap-3 py-4 border-b border-midnight/10">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-midnight/40 truncate">{p.name_fr}</p>
                     <p className="font-bold text-midnight text-sm leading-tight mt-0.5">{p.name_tw}</p>
