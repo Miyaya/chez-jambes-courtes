@@ -15,7 +15,8 @@ type OrderItem = {
 
 type OrderEmailData = {
   order_number: string
-  customer_name: string
+  customer_prenom: string
+  customer_nom: string
   customer_email: string
   items: OrderItem[]
   subtotal: number
@@ -29,7 +30,7 @@ function centsToEur(cents: number) {
 }
 
 export async function sendOrderConfirmationEmail(order: OrderEmailData) {
-  const firstName = order.customer_name.split(' ')[0] || order.customer_name
+  const firstName = order.customer_prenom
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://chezjambescourtes.com'
   const trackingUrl = `${appUrl}/commande/${order.tracking_token}`
 

@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 type CartItem = { id: string; qty: number }
 type Customer = {
-  name: string
+  nom: string
+  prenom: string
   email: string
   phone?: string
   pickup_slot_id?: string | null
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Données du panier invalides · 購物車資料有誤' }, { status: 400 })
   }
 
-  if (!customer?.name?.trim() || !customer?.email?.trim())
+  if (!customer?.prenom?.trim() || !customer?.nom?.trim() || !customer?.email?.trim())
     return NextResponse.json({ error: 'Nom et email requis · 請填寫姓名和 Email' }, { status: 400 })
 
   const supabase = createAdminClient()
@@ -116,9 +117,10 @@ export async function POST(request: Request) {
     .insert({
       items: itemsSnapshot,
       subtotal,
-      status: 'pending',
+      status: 'received',
       pickup_slot_id: customer.pickup_slot_id || null,
-      customer_name: customer.name.trim(),
+      customer_prenom: customer.prenom.trim(),
+      customer_nom: customer.nom.trim(),
       customer_email: customer.email.trim().toLowerCase(),
       customer_phone: customer.phone?.trim() || null,
       note: customer.note?.trim() || null,

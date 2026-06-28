@@ -139,7 +139,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
   const { data: order } = orderId
     ? await supabase
         .from('orders')
-        .select('id, order_number, customer_name, customer_email, items, subtotal, status, tracking_token, pickup_slots(label, location)')
+        .select('id, order_number, customer_prenom, customer_nom, customer_email, items, subtotal, status, tracking_token, pickup_slots(label, location)')
         .eq('id', orderId)
         .single()
     : { data: null }
@@ -147,12 +147,12 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
   const items = (order?.items ?? []) as ItemSnapshot[]
 
   // Send confirmation email exactly once: transition pending → locked atomically
-  if (order && order.status === 'pending') {
+  if (order && order.status === 'received') {
     const { data: locked } = await supabase
       .from('orders')
-      .update({ status: 'locked' })
+      .update({ status: 'accepted' })
       .eq('id', order.id)
-      .eq('status', 'pending') // only succeeds if still pending
+      .eq('status', 'received') // only succeeds if still received
       .select('id')
       .single()
 
@@ -161,7 +161,8 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
       const slot = order.pickup_slots as { label: string; location: string | null } | null
       await sendOrderConfirmationEmail({
         order_number: order.order_number,
-        customer_name: order.customer_name,
+        customer_prenom: order.customer_prenom,
+        customer_nom: order.customer_nom,
         customer_email: order.customer_email,
         items: items as Parameters<typeof sendOrderConfirmationEmail>[0]['items'],
         subtotal: order.subtotal,
@@ -180,8 +181,8 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         Merci · 感謝您的訂購 !
       </h1>
 
-      {order?.customer_name && (
-        <p className="text-sm text-midnight/50 text-center mb-6">{order.customer_name}</p>
+      {order?.customer_prenom && (
+        <p className="text-sm text-midnight/50 text-center mb-6">{order.customer_prenom} {order.customer_nom}</p>
       )}
 
       {order?.order_number && (

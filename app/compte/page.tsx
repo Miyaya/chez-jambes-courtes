@@ -11,14 +11,16 @@ import { DeleteAccountButton } from './_components/DeleteAccountButton'
 
 export const metadata = { title: 'Mon compte · 我的帳號 — Chez Jambes Courtes' }
 
-type OrderStatus = 'pending' | 'locked' | 'confirmed' | 'done' | 'canceled'
+type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS_LABEL: Record<OrderStatus, { fr: string; zh: string; color: string }> = {
-  pending:   { fr: 'Confirmée',     zh: '已預定', color: 'bg-orange/20 text-midnight' },
-  locked:    { fr: 'En traitement', zh: '處理中', color: 'bg-blue-50 text-blue-700' },
-  confirmed: { fr: 'Prête',         zh: '已處理', color: 'bg-green-50 text-green-700' },
-  done:      { fr: 'Livrée',        zh: '已交貨', color: 'bg-midnight/8 text-midnight' },
-  canceled:  { fr: 'Annulée',       zh: '已取消', color: 'bg-midnight/5 text-midnight/40' },
+  received:          { fr: 'Reçue',                    zh: '已收到',   color: 'bg-orange/20 text-midnight' },
+  accepted:          { fr: 'Acceptée',                 zh: '已接受',   color: 'bg-blue-50 text-blue-700' },
+  processing:        { fr: 'En traitement',             zh: '處理中',   color: 'bg-blue-50 text-blue-700' },
+  validated:         { fr: 'Validée',                  zh: '已確認',   color: 'bg-green-50 text-green-700' },
+  partial_validated: { fr: 'Partiellement validée',    zh: '部分確認', color: 'bg-amber-50 text-amber-700' },
+  complete:          { fr: 'Terminée',                 zh: '已完成',   color: 'bg-midnight/8 text-midnight' },
+  canceled:          { fr: 'Annulée',                  zh: '已取消',   color: 'bg-midnight/5 text-midnight/40' },
 }
 
 function centsToEur(cents: number) {
@@ -45,7 +47,7 @@ export default async function ComptePage() {
   // Fetch customer record — create or link if first login
   let { data: customer } = await admin
     .from('customers')
-    .select('id, name, email, subscriber_id')
+    .select('id, nom, prenom, email, subscriber_id')
     .eq('auth_user_id', user.id)
     .single()
 
@@ -53,7 +55,7 @@ export default async function ComptePage() {
     // Check for an existing guest customer by email and link them
     const { data: guestCustomer } = await admin
       .from('customers')
-      .select('id, name, email, subscriber_id')
+      .select('id, nom, prenom, email, subscriber_id')
       .eq('email', user.email!)
       .is('auth_user_id', null)
       .single()
@@ -71,14 +73,18 @@ export default async function ComptePage() {
         .is('customer_id', null)
       customer = guestCustomer
     } else {
+      const fullName = (user.user_metadata.full_name as string | undefined) ?? user.email!.split('@')[0]
+      const [prenom = fullName, ...rest] = fullName.split(' ')
+      const nom = rest.join(' ')
       const { data: newCustomer } = await admin
         .from('customers')
         .insert({
           auth_user_id: user.id,
-          name: (user.user_metadata.full_name as string | undefined) ?? user.email!.split('@')[0],
+          prenom,
+          nom,
           email: user.email!,
         })
-        .select('id, name, email, subscriber_id')
+        .select('id, nom, prenom, email, subscriber_id')
         .single()
       customer = newCustomer
     }
@@ -111,7 +117,7 @@ export default async function ComptePage() {
     customer.subscriber_id ?? null,
     newsletterActive,
     customer.email,
-    customer.name,
+    `${customer.prenom} ${customer.nom}`,
   )
 
   const deleteAccount = deleteAccountAction.bind(null, user.id)
@@ -132,7 +138,7 @@ export default async function ComptePage() {
             <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 mb-0.5">
               Mon compte · 我的帳號
             </p>
-            <h1 className="text-xl font-bold text-midnight tracking-tight">{customer.name}</h1>
+            <h1 className="text-xl font-bold text-midnight tracking-tight">{customer.prenom} {customer.nom}</h1>
             <p className="text-sm text-midnight/40">{customer.email}</p>
           </div>
           <form action={signOutAction}>
@@ -186,7 +192,7 @@ export default async function ComptePage() {
             <ul className="space-y-3">
               {orders.map(order => {
                 const status = order.status as OrderStatus
-                const label = STATUS_LABEL[status] ?? STATUS_LABEL.pending
+                const label = STATUS_LABEL[status] ?? STATUS_LABEL.received
                 // @ts-expect-error — Supabase nested select returns object not array
                 const slotLabel = order.pickup_slots?.label as string | undefined
                 return (

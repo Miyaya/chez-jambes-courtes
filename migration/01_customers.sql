@@ -26,15 +26,17 @@ CREATE POLICY "public_insert" ON subscribers
 -- customers
 
 CREATE TABLE IF NOT EXISTS customers (
-  id            uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth_user_id  uuid        UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL, -- null = guest
-  subscriber_id uuid        REFERENCES subscribers(id) ON DELETE SET NULL,
-  name          text        NOT NULL,
-  email         text        NOT NULL UNIQUE,
-  phone         text,
-  address       text,
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now()
+  id                  uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id        uuid        UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL, -- null = guest
+  subscriber_id       uuid        REFERENCES subscribers(id) ON DELETE SET NULL,
+  nom                 text        NOT NULL,
+  prenom              text        NOT NULL,
+  email               text        NOT NULL UNIQUE,
+  phone               text,
+  address             text,
+  has_complete_order  boolean     NOT NULL DEFAULT false, -- true = éligible au paiement en espèces à la livraison
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  updated_at          timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TRIGGER customers_set_updated_at

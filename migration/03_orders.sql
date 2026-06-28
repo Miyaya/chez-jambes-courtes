@@ -48,11 +48,14 @@ CREATE TABLE IF NOT EXISTS orders (
   discount_reason  text        CHECK (discount_amount = 0 OR discount_reason IS NOT NULL), -- 有折扣時必填
   total_amount     integer     GENERATED ALWAYS AS (subtotal - discount_amount) STORED,
 
-  status           text        NOT NULL DEFAULT 'pending'
-                               CHECK (status IN ('pending', 'locked', 'confirmed', 'done', 'canceled')),
+  status           text        NOT NULL DEFAULT 'received'
+                               CHECK (status IN ('received', 'accepted', 'processing', 'validated', 'partial_validated', 'complete', 'canceled')),
 
   -- Optional admin flag — set manually when something needs attention
-  flag             text        CHECK (flag IN ('shortage', 'contact_needed', 'postponed', 'others')),
+  flag             text        CHECK (flag IN ('shortage', 'contact_needed', 'postponed', 'others', 'no_show')),
+
+  payment_method   text        CHECK (payment_method IN ('stripe', 'pay_on_pickup', 'virement')),
+  cancel_reason    text,
 
   pickup_slot_id   uuid        REFERENCES pickup_slots(id) ON DELETE SET NULL,
 
@@ -60,7 +63,8 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_id      uuid        REFERENCES customers(id) ON DELETE SET NULL,
 
   -- Denormalized at order time for invoices — do not update after creation
-  customer_name    text        NOT NULL,
+  customer_prenom  text        NOT NULL,
+  customer_nom     text        NOT NULL,
   customer_email   text        NOT NULL,
   customer_phone   text,
   customer_address text,

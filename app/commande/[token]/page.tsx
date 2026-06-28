@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const metadata = { title: 'Suivi de commande · 訂單查詢 — Chez Jambes Courtes' }
 
-type OrderStatus = 'pending' | 'locked' | 'confirmed' | 'done' | 'canceled'
+type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 type ItemSnapshot = {
   name_fr: string
@@ -19,18 +19,21 @@ function centsToEur(cents: number) {
 }
 
 const STATUS_STEPS: { key: OrderStatus; fr: string; zh: string }[] = [
-  { key: 'pending',   fr: 'Confirmée',   zh: '已預定' },
-  { key: 'locked',    fr: 'En traitement', zh: '處理中' },
-  { key: 'confirmed', fr: 'Prête',        zh: '已處理' },
-  { key: 'done',      fr: 'Livrée',       zh: '已交貨' },
+  { key: 'received',          fr: 'Reçue',           zh: '已收到' },
+  { key: 'accepted',          fr: 'Acceptée',         zh: '已接受' },
+  { key: 'processing',        fr: 'En traitement',    zh: '處理中' },
+  { key: 'validated',         fr: 'Validée',          zh: '已確認' },
+  { key: 'complete',          fr: 'Terminée',         zh: '已完成' },
 ]
 
 const STEP_INDEX: Record<OrderStatus, number> = {
-  pending:   0,
-  locked:    1,
-  confirmed: 2,
-  done:      3,
-  canceled:  -1,
+  received:          0,
+  accepted:          1,
+  processing:        2,
+  validated:         3,
+  partial_validated: 3,
+  complete:          4,
+  canceled:          -1,
 }
 
 interface Props {
@@ -43,7 +46,7 @@ export default async function CommandePage({ params }: Props) {
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, order_number, customer_name, items, subtotal, status, tracking_token, pickup_slots(label, location)')
+    .select('id, order_number, customer_prenom, customer_nom, items, subtotal, status, tracking_token, pickup_slots(label, location)')
     .eq('tracking_token', token)
     .single()
 
@@ -79,7 +82,7 @@ export default async function CommandePage({ params }: Props) {
       .from('orders')
       .update({ status: 'canceled' })
       .eq('tracking_token', token)
-      .eq('status', 'pending')
+      .eq('status', 'received')
     redirect(`/commande/${token}`)
   }
 
@@ -91,7 +94,7 @@ export default async function CommandePage({ params }: Props) {
           {order.order_number}
         </p>
         <h1 className="text-xl font-bold text-midnight tracking-tight">
-          {order.customer_name}
+          {order.customer_prenom} {order.customer_nom}
         </h1>
       </div>
 
@@ -175,7 +178,7 @@ export default async function CommandePage({ params }: Props) {
       )}
 
       {/* Cancel section */}
-      {status === 'pending' && (
+      {status === 'received' && (
         <form action={cancelOrderAction}>
           <button
             type="submit"
@@ -186,7 +189,7 @@ export default async function CommandePage({ params }: Props) {
         </form>
       )}
 
-      {status === 'locked' && (
+      {status === 'accepted' && (
         <div className="relative group">
           <button
             disabled
