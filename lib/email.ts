@@ -1,7 +1,9 @@
 import { Resend } from 'resend'
 import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 type OrderItem = {
   name_fr: string
@@ -63,7 +65,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
       </tr>`
     : ''
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM ?? 'Chez Jambes Courtes <onboarding@resend.dev>',
     to: order.customer_email,
     subject: `Commande confirmée ${order.order_number} · 訂單已確認`,
@@ -165,7 +167,7 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
   const greetingZh = firstName ? `${firstName}，您好` : '您好'
   const unsubscribeUrl = buildUnsubscribeUrl(to)
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: process.env.RESEND_FROM ?? 'Chez Jambes Courtes <onboarding@resend.dev>',
     to,
     subject: 'Bienvenue chez Chez Jambes Courtes · 歡迎訂閱',
