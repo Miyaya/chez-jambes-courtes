@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS orders (
   tracking_token   text        NOT NULL UNIQUE
                                DEFAULT encode(gen_random_bytes(16), 'hex'),
 
-  -- Line items snapshot — [{product_id, name_fr, name_tw, unit_label, unit_price, promo_price, qty, line_total}, ...]
+  -- Line items snapshot — [{product_id, name_fr, name_tw, unit_label, unit_price, promo_price, qty, line_total, fulfilled}, ...]
+  -- fulfilled: set per-item after purchase trip (true = procured, false = out of stock)
   items            jsonb       NOT NULL DEFAULT '[]'
                                CHECK (jsonb_typeof(items) = 'array'),
 
@@ -69,9 +70,13 @@ CREATE TABLE IF NOT EXISTS orders (
   customer_phone   text,
   customer_address text,
 
+  -- 客戶下單時是否願意接受部分缺貨；null = 未表態（預設視同拒絕）
+  partial_allowed  boolean,
+
   note             text,
   stripe_session_id text,
   reviewd_at       timestamptz,
+  canceled_at      timestamptz,
   rejection_reason text,
 
   created_at       timestamptz NOT NULL DEFAULT now(),
@@ -117,7 +122,6 @@ CREATE POLICY "anon_insert" ON orders
   WITH CHECK (true);
 
 -- Authenticated users: read and insert their own orders
--- customer_id → customers.auth_user_id でjoinして本人確認
 CREATE POLICY "owner_select" ON orders
   FOR SELECT TO authenticated
   USING (

@@ -6,7 +6,7 @@ export default function Page() {
     <main>
       {/* ── Hero ── */}
       <section
-        className="relative min-h-[calc(100vh-57.5px)] flex items-center justify-center px-6 pt-10 pb-24"
+        className="relative min-h-[calc(100vh-91.5px)] flex items-center justify-center px-6 pt-10 pb-24"
         style={{
           background: '#FFA630',
           backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',

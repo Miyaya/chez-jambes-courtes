@@ -51,6 +51,29 @@ export async function toggleNewsletterAction(
   revalidatePath('/compte')
 }
 
+export async function updateProfileAction(
+  customerId: string,
+  _prevState: { error?: string; ok?: boolean } | null,
+  formData: FormData,
+) {
+  const prenom = formData.get('prenom')?.toString().trim() ?? ''
+  const nom    = formData.get('nom')?.toString().trim() ?? ''
+  const phone  = formData.get('phone')?.toString().trim() ?? ''
+
+  if (!prenom || !nom) return { error: 'Prénom et nom requis · 姓名為必填' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('customers')
+    .update({ prenom, nom, phone: phone || null })
+    .eq('id', customerId)
+
+  if (error) return { error: 'Erreur lors de la mise à jour · 更新失敗' }
+
+  revalidatePath('/compte')
+  return { ok: true }
+}
+
 export async function deleteAccountAction(userId: string) {
   const supabase = await createAuthClient()
   const admin = createAdminClient()

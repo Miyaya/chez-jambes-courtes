@@ -10,8 +10,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-midnight/5">
       <nav className="bg-midnight text-white px-6 py-3 flex items-center gap-1">
         <NavLink href="/admin/commandes">Commandes</NavLink>
+        <NavLink href="/admin/pickup">Pickup</NavLink>
         <NavLink href="/admin/produits">Produits</NavLink>
-        <NavLink href="/admin/comptes">Comptes</NavLink>
+        <NavLink href="/admin/achats">Achats</NavLink>
+        <NavLink href="/admin/clients">Clients</NavLink>
         <Link
           href="/"
           className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors"

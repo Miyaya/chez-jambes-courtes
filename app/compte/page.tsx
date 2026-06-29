@@ -8,6 +8,7 @@ import {
   deleteAccountAction,
 } from './actions'
 import { DeleteAccountButton } from './_components/DeleteAccountButton'
+import { ProfileForm } from './_components/ProfileForm'
 
 export const metadata = { title: 'Mon compte · 我的帳號 — Chez Jambes Courtes' }
 
@@ -47,7 +48,7 @@ export default async function ComptePage() {
   // Fetch customer record — create or link if first login
   let { data: customer } = await admin
     .from('customers')
-    .select('id, nom, prenom, email, subscriber_id')
+    .select('id, nom, prenom, email, phone, subscriber_id')
     .eq('auth_user_id', user.id)
     .single()
 
@@ -55,7 +56,7 @@ export default async function ComptePage() {
     // Check for an existing guest customer by email and link them
     const { data: guestCustomer } = await admin
       .from('customers')
-      .select('id, nom, prenom, email, subscriber_id')
+      .select('id, nom, prenom, email, phone, subscriber_id')
       .eq('email', user.email!)
       .is('auth_user_id', null)
       .single()
@@ -84,7 +85,7 @@ export default async function ComptePage() {
           nom,
           email: user.email!,
         })
-        .select('id, nom, prenom, email, subscriber_id')
+        .select('id, nom, prenom, email, phone, subscriber_id')
         .single()
       customer = newCustomer
     }
@@ -150,6 +151,16 @@ export default async function ComptePage() {
             </button>
           </form>
         </div>
+
+        {/* Profile */}
+        <Section title="Mes informations · 個人資料">
+          <ProfileForm
+            customerId={customer.id}
+            prenom={customer.prenom}
+            nom={customer.nom}
+            phone={customer.phone}
+          />
+        </Section>
 
         {/* Newsletter */}
         <Section title="Notifications · 電子報">

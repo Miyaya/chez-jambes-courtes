@@ -2,9 +2,9 @@ import { requireAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ClientOrdersDialog } from './_components/ClientOrdersDialog'
 
-export const metadata = { title: 'Comptes — Admin' }
+export const metadata = { title: 'Clients — Admin' }
 
-export default async function ComptesAdminPage() {
+export default async function ClientsAdminPage() {
   await requireAdmin()
 
   const supabase = createAdminClient()
@@ -26,7 +26,7 @@ export default async function ComptesAdminPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-bold text-midnight mb-1">Comptes</h1>
+      <h1 className="text-lg font-bold text-midnight mb-1">Clients</h1>
       <p className="text-sm text-midnight/40 mb-6">{customers?.length ?? 0} client{(customers?.length ?? 0) > 1 ? 's' : ''}</p>
 
       <div className="bg-white rounded-2xl border border-midnight/8 shadow-sm overflow-hidden">

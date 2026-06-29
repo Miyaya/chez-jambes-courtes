@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useCart } from '@/app/_components/CartProvider'
 
 type PickupSlot = { id: string; label: string; location: string | null }
+type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
 
 function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
@@ -13,6 +14,36 @@ function centsToEur(cents: number) {
 
 const inputClass =
   'w-full rounded-xl border border-midnight/20 px-4 py-3 text-sm text-midnight placeholder-midnight/30 focus:outline-none focus:ring-2 focus:ring-midnight/30 bg-white'
+
+const PAYMENT_OPTIONS: {
+  id: PaymentMethod
+  label: string
+  labelZh: string
+  icon: string
+  description: string
+}[] = [
+  {
+    id: 'stripe',
+    label: 'Carte bancaire',
+    labelZh: '信用卡',
+    icon: '💳',
+    description: 'Paiement sécurisé via Stripe',
+  },
+  {
+    id: 'virement',
+    label: 'Virement bancaire',
+    labelZh: '銀行轉帳',
+    icon: '🏦',
+    description: 'Coordonnées bancaires envoyées par email',
+  },
+  {
+    id: 'pay_on_pickup',
+    label: 'Paiement à la livraison',
+    labelZh: '面交付款',
+    icon: '🤝',
+    description: 'Espèces ou virement lors du retrait',
+  },
+]
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -25,8 +56,11 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState('')
   const [slotId, setSlotId] = useState('')
   const [note, setNote] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe')
+  const [payOnPickupEligible, setPayOnPickupEligible] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loggedIn, setLoggedIn] = useState(false)
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce(
@@ -36,6 +70,21 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (items.length === 0) router.replace('/')
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    fetch('/api/customer/me')
+      .then(r => r.json())
+      .then(data => {
+        if (!data) return
+        setFirstName(data.prenom ?? '')
+        setLastName(data.nom ?? '')
+        setEmail(data.email ?? '')
+        setPhone(data.phone ?? '')
+        setLoggedIn(true)
+        if (data.email) checkEligibility(data.email)
+      })
+      .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -56,7 +105,19 @@ export default function CheckoutPage() {
       .catch(console.error)
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function checkEligibility(emailValue: string) {
+    if (!emailValue.includes('@')) return
+    try {
+      const res = await fetch(`/api/customer/eligibility?email=${encodeURIComponent(emailValue)}`)
+      const data = await res.json()
+      setPayOnPickupEligible(data.eligible === true)
+      if (!data.eligible && paymentMethod === 'pay_on_pickup') setPaymentMethod('stripe')
+    } catch {
+      // silently fail — server enforces it anyway
+    }
+  }
+
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     setLoading(true)
@@ -66,7 +127,15 @@ export default function CheckoutPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cartItems: items.map(([id, qty]) => ({ id, qty })),
-          customer: { name: `${firstName.trim()} ${lastName.trim()}`.trim(), email, phone, pickup_slot_id: slotId || null, note },
+          customer: {
+            prenom: firstName.trim(),
+            nom: lastName.trim(),
+            email,
+            phone,
+            pickup_slot_id: slotId || null,
+            note,
+            payment_method: paymentMethod,
+          },
         }),
       })
       const data = await res.json()
@@ -74,7 +143,11 @@ export default function CheckoutPage() {
         setError(data.error ?? 'Une erreur est survenue.')
         return
       }
-      window.location.href = data.url
+      if (data.token) {
+        router.push(`/merci/commande?token=${data.token}&method=${paymentMethod}`)
+      } else {
+        window.location.href = data.url
+      }
     } catch {
       setError('Une erreur est survenue. Veuillez réessayer.')
     } finally {
@@ -148,9 +221,11 @@ export default function CheckoutPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                onBlur={e => checkEligibility(e.target.value)}
                 required
+                disabled={loggedIn}
                 placeholder="sophie@example.com"
-                className={inputClass}
+                className={`${inputClass} ${loggedIn ? 'bg-midnight/8' : ''}`}
               />
             </div>
 
@@ -194,6 +269,59 @@ export default function CheckoutPage() {
               </div>
             )}
 
+            {/* Payment method */}
+            <div>
+              <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider font-bold">
+                Mode de paiement · 付款方式 <span className="text-red-400">*</span>
+              </p>
+              <div className="space-y-2">
+                {PAYMENT_OPTIONS.map(opt => {
+                  const disabled = opt.id === 'pay_on_pickup' && !payOnPickupEligible
+                  const selected = paymentMethod === opt.id
+
+                  return (
+                    <div key={opt.id} className="relative group">
+                      <button
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => !disabled && setPaymentMethod(opt.id)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-colors ${
+                          disabled
+                            ? 'opacity-40 cursor-not-allowed border-midnight/10 bg-midnight/3'
+                            : selected
+                            ? 'border-midnight bg-midnight/4'
+                            : 'border-midnight/15 hover:border-midnight/30 bg-white'
+                        }`}
+                      >
+                        <span className="text-xl shrink-0">{opt.icon}</span>
+                        <div className="min-w-0">
+                          <p className={`text-sm font-bold ${disabled ? 'text-midnight/40' : 'text-midnight'}`}>
+                            {opt.label} · {opt.labelZh}
+                          </p>
+                          <p className="text-xs text-midnight/40">{opt.description}</p>
+                        </div>
+                        {selected && !disabled && (
+                          <span className="ml-auto shrink-0 w-4 h-4 rounded-full bg-midnight" />
+                        )}
+                      </button>
+
+                      {/* Tooltip for disabled pay_on_pickup */}
+                      {disabled && (
+                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
+                          Nécessite au moins une commande complétée.
+                          <br />
+                          <span className="text-white/60 text-[10px]">
+                            需要至少一次完成的訂單才可選擇。<br/>惡意放鳥者將被列入黑名單 🚫
+                          </span>
+                          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-midnight" />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
                 Note · 備註
@@ -216,12 +344,18 @@ export default function CheckoutPage() {
               disabled={loading}
               className="w-full bg-midnight text-orange font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-orange hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Chargement… · 處理中…' : 'Payer avec Stripe · 前往付款 →'}
+              {loading
+                ? 'Chargement… · 處理中…'
+                : paymentMethod === 'stripe'
+                ? 'Payer avec Stripe · 前往付款 →'
+                : 'Confirmer la commande · 確認訂單 →'}
             </button>
 
-            <p className="text-xs text-midnight/30 text-center">
-              Paiement sécurisé via Stripe · 透過 Stripe 安全付款
-            </p>
+            {paymentMethod === 'stripe' && (
+              <p className="text-xs text-midnight/30 text-center">
+                Paiement sécurisé via Stripe · 透過 Stripe 安全付款
+              </p>
+            )}
           </form>
 
           {/* Order summary */}

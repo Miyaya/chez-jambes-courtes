@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useOptimistic } from 'react'
 import Link from 'next/link'
-import { updateOrderStatusAction, updateFlagAction } from '../actions'
+import { updateOrderStatusAction, updateFlagAction, captureStripePaymentAction, voidStripePaymentAction } from '../actions'
 
 type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 type OrderFlag = 'shortage' | 'contact_needed' | 'postponed' | 'others' | 'no_show'
@@ -51,6 +51,7 @@ export type Order = {
   tracking_token: string
   note: string | null
   items: ItemSnapshot[]
+  payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
   pickup_slots: { label: string; location: string | null } | null
 }
 
@@ -69,6 +70,7 @@ export function CommandesTable({
   const [toastMsg, setToastMsg] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
   const [openOrderId, setOpenOrderId] = useState<string | null>(null)
+  const [stripeLoading, setStripeLoading] = useState<Record<string, 'capture' | 'void'>>({})
   const [, startTransition] = useTransition()
 
   const [optimisticOrders, updateOptimistic] = useOptimistic(
@@ -83,6 +85,19 @@ export function CommandesTable({
     setTimeout(() => setToastVisible(false), 2500)
   }
 
+  async function handleStripeAction(orderId: string, action: 'capture' | 'void') {
+    setStripeLoading(prev => ({ ...prev, [orderId]: action }))
+    try {
+      if (action === 'capture') await captureStripePaymentAction(orderId)
+      else await voidStripePaymentAction(orderId)
+      showToast(action === 'capture' ? 'Paiement capturé ✓' : 'Autorisation annulée ✓')
+    } catch {
+      showToast('Erreur Stripe — vérifiez le dashboard')
+    } finally {
+      setStripeLoading(prev => { const n = { ...prev }; delete n[orderId]; return n })
+    }
+  }
+
   const openOrder = openOrderId ? optimisticOrders.find(o => o.id === openOrderId) : null
 
   return (
@@ -95,6 +110,7 @@ export function CommandesTable({
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Client</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Créneau</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Total</th>
+              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Paiement</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Statut</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Flag</th>
               <th className="px-4 py-3"></th>
@@ -103,7 +119,7 @@ export function CommandesTable({
           <tbody className="divide-y divide-midnight/5">
             {optimisticOrders.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-midnight/35">
+                <td colSpan={8} className="px-4 py-10 text-center text-sm text-midnight/35">
                   Aucune commande.
                 </td>
               </tr>
@@ -122,7 +138,10 @@ export function CommandesTable({
                       {order.order_number}
                     </Link>
                     <p className="text-xs text-midnight/35 mt-0.5">
-                      {new Date(order.created_at).toLocaleDateString('fr-FR')}
+                      {new Date(order.created_at).toLocaleString('fr-FR', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                      })}
                     </p>
                   </td>
 
@@ -149,6 +168,21 @@ export function CommandesTable({
                     {centsToEur(order.total_amount)} €
                   </td>
 
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {order.payment_method === 'stripe' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">💳 Stripe</span>
+                    )}
+                    {order.payment_method === 'virement' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">🏦 Virement</span>
+                    )}
+                    {order.payment_method === 'pay_on_pickup' && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700">🤝 Face</span>
+                    )}
+                    {!order.payment_method && (
+                      <span className="text-xs text-midnight/30">—</span>
+                    )}
+                  </td>
+
                   <td className="px-4 py-3">
                     <select
                       value={order.status}
@@ -167,6 +201,24 @@ export function CommandesTable({
                         <option key={opt} value={opt}>{STATUS[opt].label}</option>
                       ))}
                     </select>
+                    {order.payment_method === 'stripe' && (
+                      <div className="flex gap-1 mt-1.5">
+                        <button
+                          onClick={() => handleStripeAction(order.id, 'capture')}
+                          disabled={!!stripeLoading[order.id]}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-800 hover:bg-green-200 disabled:opacity-40 transition-colors"
+                        >
+                          {stripeLoading[order.id] === 'capture' ? '…' : 'Capturer'}
+                        </button>
+                        <button
+                          onClick={() => handleStripeAction(order.id, 'void')}
+                          disabled={!!stripeLoading[order.id]}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 transition-colors"
+                        >
+                          {stripeLoading[order.id] === 'void' ? '…' : 'Void'}
+                        </button>
+                      </div>
+                    )}
                   </td>
 
                   <td className="px-4 py-3">
@@ -221,8 +273,9 @@ export function CommandesTable({
                   <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 mb-0.5">Commande</p>
                   <h2 className="text-xl font-bold text-midnight">{openOrder.order_number}</h2>
                   <p className="text-sm text-midnight/40 mt-0.5">
-                    {new Date(openOrder.created_at).toLocaleDateString('fr-FR', {
+                    {new Date(openOrder.created_at).toLocaleString('fr-FR', {
                       day: 'numeric', month: 'long', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit',
                     })}
                   </p>
                 </div>

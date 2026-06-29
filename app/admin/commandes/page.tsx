@@ -12,7 +12,7 @@ export default async function CommandesAdminPage() {
   const [{ data: orders }, { data: allEmails }] = await Promise.all([
     supabase
       .from('orders')
-      .select('id, order_number, customer_prenom, customer_nom, customer_email, customer_phone, status, flag, subtotal, discount_amount, total_amount, created_at, tracking_token, note, items, pickup_slots(label, location)')
+      .select('id, order_number, customer_prenom, customer_nom, customer_email, customer_phone, status, flag, subtotal, discount_amount, total_amount, created_at, tracking_token, note, items, payment_method, pickup_slots(label, location)')
       .order('created_at', { ascending: false })
       .limit(100),
     supabase

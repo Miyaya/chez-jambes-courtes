@@ -35,7 +35,7 @@ export default async function ProduitsAdminPage() {
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Origine</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Prix</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Stock</th>
-              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Disponible</th>
+              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Afficher</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>

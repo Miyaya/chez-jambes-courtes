@@ -79,7 +79,7 @@ export function NouveauProduitDialog() {
 
                 <div className="flex items-center justify-between py-1">
                   <span className="text-xs font-bold text-midnight/50 uppercase tracking-wider">
-                    Disponible à la vente
+                    Afficher à la vente
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="available" defaultChecked className="sr-only peer" />

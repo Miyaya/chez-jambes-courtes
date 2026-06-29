@@ -1,23 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { useCart } from './CartProvider'
 import { createClient } from '@/lib/supabase/browser'
 
 function UserIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-5 h-5"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
@@ -26,16 +17,7 @@ function UserIcon() {
 
 function CartIcon() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-5 h-5"
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
       <circle cx="9" cy="21" r="1" />
       <circle cx="20" cy="21" r="1" />
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -43,9 +25,23 @@ function CartIcon() {
   )
 }
 
+function BurgerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  )
+}
+
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [shopOpen, setShopOpen] = useState(false)
+  const [burgerOpen, setBurgerOpen] = useState(false)
+  const shopRef = useRef<HTMLDivElement>(null)
+  const burgerRef = useRef<HTMLDivElement>(null)
   const { cartTotal, openCart } = useCart()
 
   useEffect(() => {
@@ -65,57 +61,63 @@ export default function Nav() {
     return () => window.removeEventListener('scroll', check)
   }, [])
 
-  const isScrolled = scrolled
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (shopRef.current && !shopRef.current.contains(e.target as Node)) setShopOpen(false)
+      if (burgerRef.current && !burgerRef.current.contains(e.target as Node)) setBurgerOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const dropdownBg = scrolled ? 'bg-midnight border-white/10' : 'bg-orange border-midnight/10'
+  const dropdownItem = scrolled ? 'text-white hover:bg-white/10' : 'text-midnight hover:bg-midnight/10'
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-colors duration-300 ${
-        isScrolled ? 'bg-midnight' : 'bg-orange'
-      }`}
-    >
+    <header className={`z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight' : 'bg-orange'}`}>
       <div className="mx-auto w-full max-w-xl px-8 py-4 flex items-center justify-between">
         <Link
           href="/"
-          className={`text-base font-bold tracking-[0.14em] uppercase transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-midnight'}`}
+          className={`text-base font-bold tracking-[0.14em] uppercase transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
         >
           Chez Jambes Courtes
         </Link>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/instock"
-            className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 ${
-              isScrolled
-                ? 'border-orange text-orange hover:bg-orange hover:text-midnight'
-                : 'border-midnight text-midnight hover:bg-midnight hover:text-orange'
-            }`}
-          >
-            現貨
-          </Link>
-          <Link
-            href="/preorder"
-            className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 ${
-              isScrolled
-                ? 'border-white text-white hover:bg-white hover:text-midnight'
-                : 'border-midnight/40 text-midnight/70 hover:border-midnight hover:text-midnight'
-            }`}
-          >
-            預購
-          </Link>
+          {/* 購買 dropdown */}
+          <div ref={shopRef} className="relative">
+            <button
+              onClick={() => { setShopOpen(o => !o); setBurgerOpen(false) }}
+              className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 flex items-center gap-1 ${
+                scrolled
+                  ? 'border-orange text-orange hover:bg-orange hover:text-midnight'
+                  : 'border-midnight text-midnight hover:bg-midnight hover:text-orange'
+              }`}
+            >
+              <span>購買 <span className="font-normal opacity-60">· Acheter</span></span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 transition-transform duration-200 ${shopOpen ? 'rotate-180' : ''}`} aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            {shopOpen && (
+              <div className={`absolute right-0 top-full mt-2 min-w-[9rem] rounded-xl border shadow-lg overflow-hidden ${dropdownBg}`}>
+                <Link href="/instock" onClick={() => setShopOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-bold tracking-[0.08em]">現貨</p>
+                  <p className="text-[10px] opacity-50 font-normal">En stock</p>
+                </Link>
+                <Link href="/preorder" onClick={() => setShopOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-bold tracking-[0.08em]">預購</p>
+                  <p className="text-[10px] opacity-50 font-normal">Précommande</p>
+                </Link>
+              </div>
+            )}
+          </div>
 
-          <Link
-            href={user ? '/compte' : '/connexion'}
-            className={`transition-colors duration-300 ${isScrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
-            aria-label={user ? 'Mon compte · 我的帳號' : 'Se connecter · 登入'}
-          >
-            <UserIcon />
-          </Link>
-
-          {/* Cart icon — animation target, queried via data-cart-icon */}
+          {/* Cart */}
           <button
             data-cart-icon
             onClick={openCart}
-            className={`relative transition-colors duration-300 ${isScrolled ? 'text-white' : 'text-midnight'}`}
+            className={`relative transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
             aria-label={`Panier — ${cartTotal} article${cartTotal !== 1 ? 's' : ''}`}
           >
             <CartIcon />
@@ -125,26 +127,57 @@ export default function Nav() {
               </span>
             )}
           </button>
+
+          {/* Account icon — only shown when logged OUT */}
+          {!user && (
+            <Link
+              href="/connexion"
+              className={`transition-colors duration-300 ${scrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
+              aria-label="Se connecter · 登入"
+            >
+              <UserIcon />
+            </Link>
+          )}
+
+          {/* Burger */}
+          <div ref={burgerRef} className="relative">
+            <button
+              onClick={() => { setBurgerOpen(o => !o); setShopOpen(false) }}
+              className={`transition-colors duration-300 ${scrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
+              aria-label="選單"
+            >
+              <BurgerIcon />
+            </button>
+            {burgerOpen && (
+              <div className={`absolute right-0 top-full mt-2 min-w-[10rem] rounded-xl border shadow-lg overflow-hidden ${dropdownBg}`}>
+                {user && (
+                  <Link href="/compte" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                    <p className="text-sm font-bold tracking-[0.08em]">個人資訊</p>
+                    <p className="text-[10px] opacity-50 font-normal">Mon compte</p>
+                  </Link>
+                )}
+                <Link href="/comment-acheter" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-bold tracking-[0.08em]">購買流程</p>
+                  <p className="text-[10px] opacity-50 font-normal">Comment acheter</p>
+                </Link>
+                <Link href="/faq" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-bold tracking-[0.08em]">FAQ</p>
+                  <p className="text-[10px] opacity-50 font-normal">Questions fréquentes</p>
+                </Link>
+                <Link href="/contact" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-bold tracking-[0.08em]">聯絡我們</p>
+                  <p className="text-[10px] opacity-50 font-normal">Nous contacter</p>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Wave bottom edge */}
-      <div
-        aria-hidden="true"
-        className={`absolute top-full left-0 right-0 h-7 pointer-events-none transition-opacity duration-300 ${
-          isScrolled ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <svg
-          viewBox="0 0 1440 28"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          className="block w-full h-full"
-        >
-          <path
-            d="M0,0 L1440,0 L1440,20 C1402,14 1342,24 1264,12 C1124,0 1042,22 902,10 C762,22 696,4 572,16 C448,24 386,6 294,16 C168,24 82,8 0,16 Z"
-            fill="#031926"
-          />
+      <div aria-hidden="true" className={`absolute top-full left-0 right-0 h-7 pointer-events-none transition-opacity duration-300 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
+        <svg viewBox="0 0 1440 28" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="block w-full h-full">
+          <path d="M0,0 L1440,0 L1440,20 C1402,14 1342,24 1264,12 C1124,0 1042,22 902,10 C762,22 696,4 572,16 C448,24 386,6 294,16 C168,24 82,8 0,16 Z" fill="#031926" />
         </svg>
       </div>
     </header>

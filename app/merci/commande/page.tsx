@@ -68,12 +68,105 @@ function BackHome() {
   )
 }
 
+const METHOD_LABEL: Record<string, { fr: string; zh: string; icon: string }> = {
+  virement:      { fr: 'Virement bancaire',     zh: '銀行轉帳',  icon: '🏦' },
+  pay_on_pickup: { fr: 'Paiement à la livraison', zh: '面交付款', icon: '🤝' },
+}
+
 interface Props {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: Promise<{ session_id?: string; token?: string; method?: string }>
 }
 
 export default async function CommandeConfirmeePage({ searchParams }: Props) {
-  const { session_id } = await searchParams
+  const { session_id, token, method } = await searchParams
+
+  // ── Non-Stripe confirmation ──────────────────────────────────────────────────
+  if (token && !session_id) {
+    const supabase = createAdminClient()
+    const { data: order } = await supabase
+      .from('orders')
+      .select('order_number, customer_prenom, customer_nom, items, subtotal, tracking_token, pickup_slots(label, location)')
+      .eq('tracking_token', token)
+      .single()
+
+    const items = (order?.items ?? []) as ItemSnapshot[]
+    const methodInfo = method ? METHOD_LABEL[method] : null
+
+    return (
+      <PageShell>
+        <span className="text-5xl block mb-5 text-center">{methodInfo?.icon ?? '✓'}</span>
+        <h1 className="text-2xl font-bold text-midnight mb-1 text-center tracking-tight">
+          Merci · 感謝您的訂購 !
+        </h1>
+        {order?.customer_prenom && (
+          <p className="text-sm text-midnight/50 text-center mb-6">
+            {order.customer_prenom} {order.customer_nom}
+          </p>
+        )}
+        {order?.order_number && (
+          <p className="text-xs text-center text-midnight/35 uppercase tracking-widest mb-6">
+            {order.order_number}
+          </p>
+        )}
+
+        {items.length > 0 && (
+          <div className="border-t border-b border-midnight/10 py-4 mb-5 space-y-2">
+            {items.map((item, i) => (
+              <div key={i} className="flex justify-between items-baseline gap-2">
+                <div>
+                  <span className="text-sm font-bold text-midnight">{item.name_tw}</span>
+                  <span className="text-xs text-midnight/40 ml-1.5">
+                    {item.name_fr} × {item.qty} {item.unit_label}
+                  </span>
+                </div>
+                <span className="text-sm font-bold text-midnight tabular-nums shrink-0">
+                  {centsToEur(item.line_total)} €
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between items-baseline gap-2 pt-2 border-t border-midnight/10">
+              <span className="text-sm font-bold text-midnight">Total</span>
+              <span className="text-sm font-bold text-midnight tabular-nums">
+                {centsToEur(order?.subtotal ?? 0)} €
+              </span>
+            </div>
+          </div>
+        )}
+
+        {order?.pickup_slots && (
+          <div className="bg-orange/20 rounded-xl px-4 py-3 mb-5 text-center">
+            <p className="text-xs uppercase tracking-wider text-midnight/50 mb-1">Retrait · 取貨時段</p>
+            {/* @ts-expect-error — nested select */}
+            <p className="text-sm font-bold text-midnight">{order.pickup_slots.label}</p>
+          </div>
+        )}
+
+        {methodInfo && (
+          <div className="bg-midnight/5 rounded-xl px-4 py-3 mb-6 text-center">
+            <p className="text-xs uppercase tracking-wider text-midnight/40 mb-1">Mode de paiement · 付款方式</p>
+            <p className="text-sm font-bold text-midnight">{methodInfo.fr} · {methodInfo.zh}</p>
+            {method === 'virement' && process.env.NEXT_PUBLIC_IBAN && (
+              <p className="text-xs text-midnight/50 mt-2 font-mono">{process.env.NEXT_PUBLIC_IBAN}</p>
+            )}
+            {method === 'virement' && order?.order_number && (
+              <p className="text-xs text-midnight/40 mt-1">
+                Référence : <span className="font-bold">{order.order_number}</span>
+              </p>
+            )}
+          </div>
+        )}
+
+        <p className="text-xs text-midnight/40 leading-relaxed text-center mb-6">
+          Un e-mail de confirmation vous a été envoyé.
+          <br />
+          <span className="text-midnight/30">訂單確認信已寄送至您的 Email。</span>
+        </p>
+        <div className="text-center">
+          <BackHome />
+        </div>
+      </PageShell>
+    )
+  }
 
   if (!session_id) {
     return (
@@ -106,7 +199,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         <span className="text-5xl block mb-6 text-center">✗</span>
         <h1 className="text-2xl font-bold text-midnight mb-3 text-center">Session introuvable · 找不到訂單</h1>
         <p className="text-sm text-midnight/55 mb-8 leading-relaxed text-center">
-          Veuillez contacter hello@chezjambescourtes.com
+          Veuillez contacter contact@chezjambescourtes.com
         </p>
         <div className="text-center">
           <BackHome />
@@ -115,7 +208,16 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
     )
   }
 
-  if (session.payment_status !== 'paid') {
+  // manual capture: payment_status stays 'unpaid' until capture; check the PaymentIntent instead
+  let paymentOk = session.payment_status === 'paid'
+  if (!paymentOk && session.payment_intent) {
+    const pi = await stripe.paymentIntents.retrieve(
+      typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent.id
+    )
+    paymentOk = pi.status === 'requires_capture'
+  }
+
+  if (!paymentOk) {
     return (
       <PageShell>
         <span className="text-5xl block mb-6 text-center">⏳</span>

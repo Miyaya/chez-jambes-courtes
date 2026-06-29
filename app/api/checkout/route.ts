@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendOrderConfirmationEmail } from '@/lib/email'
 
+type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
 type CartItem = { id: string; qty: number }
 type Customer = {
   nom: string
@@ -10,6 +12,7 @@ type Customer = {
   phone?: string
   pickup_slot_id?: string | null
   note?: string
+  payment_method: PaymentMethod
 }
 
 type ItemSnapshot = {
@@ -110,14 +113,30 @@ export async function POST(request: Request) {
   }
 
   const subtotal = itemsSnapshot.reduce((sum, i) => sum + i.line_total, 0)
+  const paymentMethod: PaymentMethod = customer.payment_method ?? 'stripe'
 
-  // Create pending order in Supabase first — gets us an order ID to reference in Stripe metadata
+  // Server-side enforcement: pay_on_pickup requires has_complete_order
+  if (paymentMethod === 'pay_on_pickup') {
+    const { data: existing } = await supabase
+      .from('customers')
+      .select('has_complete_order')
+      .eq('email', customer.email.trim().toLowerCase())
+      .single()
+    if (!existing?.has_complete_order) {
+      return NextResponse.json(
+        { error: 'Le paiement à la livraison nécessite au moins une commande complétée.' },
+        { status: 403 },
+      )
+    }
+  }
+
   const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert({
       items: itemsSnapshot,
       subtotal,
       status: 'received',
+      payment_method: paymentMethod,
       pickup_slot_id: customer.pickup_slot_id || null,
       customer_prenom: customer.prenom.trim(),
       customer_nom: customer.nom.trim(),
@@ -125,7 +144,7 @@ export async function POST(request: Request) {
       customer_phone: customer.phone?.trim() || null,
       note: customer.note?.trim() || null,
     })
-    .select('id')
+    .select('id, order_number, tracking_token')
     .single()
 
   if (orderError || !order) {
@@ -133,8 +152,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
   }
 
-  // Create Stripe Checkout Session
-  // Uses Stripe.createFetchHttpClient() for Cloudflare Workers compatibility
+  // Non-Stripe: send confirmation email immediately and return tracking token
+  if (paymentMethod !== 'stripe') {
+    let pickupSlotLabel: string | null = null
+    let pickupSlotLocation: string | null = null
+    if (customer.pickup_slot_id) {
+      const { data: slot } = await supabase
+        .from('pickup_slots')
+        .select('label, location')
+        .eq('id', customer.pickup_slot_id)
+        .single()
+      pickupSlotLabel = slot?.label ?? null
+      pickupSlotLocation = slot?.location ?? null
+    }
+    sendOrderConfirmationEmail({
+      order_number: order.order_number,
+      customer_prenom: customer.prenom.trim(),
+      customer_nom: customer.nom.trim(),
+      customer_email: customer.email.trim().toLowerCase(),
+      items: itemsSnapshot,
+      subtotal,
+      tracking_token: order.tracking_token,
+      pickup_slot_label: pickupSlotLabel,
+      pickup_slot_location: pickupSlotLocation,
+    }).catch(err => console.error('[email] order confirmation failed:', err))
+
+    return NextResponse.json({ token: order.tracking_token, method: paymentMethod })
+  }
+
+  // Stripe flow
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     httpClient: Stripe.createFetchHttpClient(),
   })
@@ -148,6 +194,7 @@ export async function POST(request: Request) {
       metadata: { order_id: order.id },
       payment_intent_data: {
         description: 'Chez Jambes Courtes',
+        capture_method: 'manual',
       },
       locale: 'fr',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/merci/commande?session_id={CHECKOUT_SESSION_ID}`,
@@ -155,13 +202,10 @@ export async function POST(request: Request) {
     })
   } catch (stripeErr) {
     console.error('[checkout] stripe error:', stripeErr)
-    // Remove the pending order so it doesn't litter the DB
     await supabase.from('orders').delete().eq('id', order.id)
     return NextResponse.json({ error: 'Erreur de paiement · 付款服務發生錯誤' }, { status: 500 })
   }
 
-  // Link the Stripe session back to the order
   await supabase.from('orders').update({ stripe_session_id: session.id }).eq('id', order.id)
-
   return NextResponse.json({ url: session.url })
 }
