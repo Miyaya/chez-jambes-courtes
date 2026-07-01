@@ -34,6 +34,54 @@ export default function CartPanel() {
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
 
+  const instockItems = items.filter(([id]) => products[id]?.stock_quantity != null)
+  const preorderItems = items.filter(([id]) => products[id]?.stock_quantity == null)
+  const hasBoth = instockItems.length > 0 && preorderItems.length > 0
+
+  function renderCartItem(id: string, qty: number) {
+    const p = products[id]
+    if (!p) return null
+    const maxQty = p.stock_quantity != null ? p.stock_quantity : Infinity
+    return (
+      <div key={id} className="flex items-center gap-3 py-4 border-b border-midnight/10">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-midnight/40 truncate">{p.name_fr}</p>
+          <p className="font-bold text-midnight text-sm leading-tight mt-0.5">{p.name_tw}</p>
+          <p className="text-xs text-midnight/35 mt-0.5">{centsToEur(p.unit_price)} € / {p.unit_label}</p>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => updateQty(id, qty - 1)}
+            className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors"
+          >
+            −
+          </button>
+          <span className="w-5 text-center text-sm font-bold text-midnight tabular-nums">{qty}</span>
+          <button
+            onClick={() => updateQty(id, Math.min(maxQty, qty + 1))}
+            disabled={qty >= maxQty}
+            className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            +
+          </button>
+        </div>
+
+        <p className="text-sm font-bold text-midnight tabular-nums shrink-0 w-14 text-right">
+          {centsToEur(p.unit_price * qty)} €
+        </p>
+
+        <button
+          onClick={() => removeFromCart(id)}
+          className="text-midnight/25 hover:text-midnight transition-colors shrink-0 text-sm leading-none ml-1"
+          aria-label="Retirer"
+        >
+          ✕
+        </button>
+      </div>
+    )
+  }
+
   return (
     <>
       {/* Backdrop */}
@@ -46,8 +94,8 @@ export default function CartPanel() {
 
       {/* Panel */}
       <div
-        className={`fixed right-0 top-[58px] h-[calc(100vh-58px)] w-full sm:w-[400px] bg-white border-l border-midnight/10 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
-          visible ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed bottom-0 left-0 right-0 h-[88vh] rounded-t-2xl sm:rounded-none sm:left-auto sm:right-0 sm:top-[58px] sm:h-[calc(100vh-58px)] sm:w-[400px] bg-white border-t sm:border-t-0 sm:border-l border-midnight/10 shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${
+          visible ? 'translate-y-0 sm:translate-x-0' : 'translate-y-full sm:translate-y-0 sm:translate-x-full'
         }`}
       >
         {/* Header */}
@@ -62,56 +110,46 @@ export default function CartPanel() {
           </button>
         </div>
 
+        {/* Warning banner */}
+        {hasBoth && (
+          <div className="px-5 py-3 bg-red-50 border-b border-red-100 shrink-0">
+            <p className="text-xs text-red-600 leading-relaxed font-medium">
+              ⚠️ 現貨與預購需分開結帳，請分兩次下單。
+            </p>
+            <p className="text-[0.65rem] text-red-500 mt-0.5">
+              Les articles en stock et en précommande doivent être commandés séparément.
+            </p>
+          </div>
+        )}
+
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-2">
           {items.length === 0 ? (
             <p className="text-midnight/30 text-sm tracking-widest uppercase text-center py-20">
               Panier vide · 購物車是空的
             </p>
+          ) : hasBoth ? (
+            <>
+              <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold pt-4 pb-1">
+                現貨 · En stock
+              </p>
+              {instockItems.map(([id, qty]) => renderCartItem(id, qty))}
+              <div className="flex items-center gap-3 my-3">
+                <div className="flex-1 h-px bg-midnight/10" />
+                <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold">
+                  預購 · Précommande
+                </p>
+                <div className="flex-1 h-px bg-midnight/10" />
+              </div>
+              {preorderItems.map(([id, qty]) => renderCartItem(id, qty))}
+            </>
           ) : (
-            items.map(([id, qty]) => {
-              const p = products[id]
-              if (!p) return null
-              const maxQty = p.stock_quantity != null ? p.stock_quantity : Infinity
-              return (
-                <div key={id} className="flex items-center gap-3 py-4 border-b border-midnight/10">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-midnight/40 truncate">{p.name_fr}</p>
-                    <p className="font-bold text-midnight text-sm leading-tight mt-0.5">{p.name_tw}</p>
-                    <p className="text-xs text-midnight/35 mt-0.5">{centsToEur(p.unit_price)} € / {p.unit_label}</p>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={() => updateQty(id, qty - 1)}
-                      className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors"
-                    >
-                      −
-                    </button>
-                    <span className="w-5 text-center text-sm font-bold text-midnight tabular-nums">{qty}</span>
-                    <button
-                      onClick={() => updateQty(id, Math.min(maxQty, qty + 1))}
-                      disabled={qty >= maxQty}
-                      className="w-6 h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <p className="text-sm font-bold text-midnight tabular-nums shrink-0 w-14 text-right">
-                    {centsToEur(p.unit_price * qty)} €
-                  </p>
-
-                  <button
-                    onClick={() => removeFromCart(id)}
-                    className="text-midnight/25 hover:text-midnight transition-colors shrink-0 text-sm leading-none ml-1"
-                    aria-label="Retirer"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )
-            })
+            <>
+              <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold pt-4 pb-1">
+                {instockItems.length > 0 ? '現貨 · En stock' : '預購 · Précommande'}
+              </p>
+              {items.map(([id, qty]) => renderCartItem(id, qty))}
+            </>
           )}
         </div>
 
@@ -125,7 +163,7 @@ export default function CartPanel() {
             <Link
               href="/checkout"
               onClick={closeCart}
-              className="block w-full bg-midnight text-orange font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-orange hover:text-midnight transition-colors duration-200 text-center"
+              className="block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight transition-colors duration-200 text-center"
             >
               Confirmer · 前往結帳 →
             </Link>

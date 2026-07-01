@@ -38,13 +38,13 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
     .map(
       item => `
       <tr>
-        <td style="padding:8px 0;border-bottom:1px dashed rgba(3,25,38,0.1);font-size:14px;color:#031926;">
+        <td style="padding:8px 0;border-bottom:1px dashed rgba(3,25,38,0.1);font-size:14px;color:#1A1512;">
           <strong>${item.name_tw}</strong>
           <span style="color:rgba(3,25,38,0.5);margin-left:6px;">${item.name_fr}</span>
           <br />
           <span style="font-size:12px;color:rgba(3,25,38,0.45);">${item.qty} × ${item.unit_label}</span>
         </td>
-        <td style="padding:8px 0;border-bottom:1px dashed rgba(3,25,38,0.1);font-size:14px;color:#031926;text-align:right;white-space:nowrap;">
+        <td style="padding:8px 0;border-bottom:1px dashed rgba(3,25,38,0.1);font-size:14px;color:#1A1512;text-align:right;white-space:nowrap;">
           ${centsToEur(item.line_total)} €
         </td>
       </tr>`,
@@ -58,7 +58,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(3,25,38,0.45);">
             Créneau de retrait · 取貨時段
           </p>
-          <p style="margin:0;font-size:14px;font-weight:bold;color:#031926;">
+          <p style="margin:0;font-size:14px;font-weight:bold;color:#1A1512;">
             ${order.pickup_slot_label}
           </p>
           ${order.pickup_slot_location ? `<p style="margin:4px 0 0;font-size:12px;color:rgba(3,25,38,0.5);">${order.pickup_slot_location}</p>` : ''}
@@ -77,8 +77,8 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Commande confirmée</title>
 </head>
-<body style="margin:0;padding:0;background:#FFA630;font-family:Georgia,serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFA630;padding:48px 24px;">
+<body style="margin:0;padding:0;background:#FACA31;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FACA31;padding:48px 24px;">
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
@@ -86,7 +86,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
           <!-- Header -->
           <tr>
             <td style="padding-bottom:32px;">
-              <p style="margin:0;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#031926;opacity:0.6;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#1A1512;opacity:0.6;">
                 Chez Jambes Courtes
               </p>
             </td>
@@ -96,7 +96,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
           <tr>
             <td style="background:#ffffff;border:1px solid rgba(3,25,38,0.15);border-radius:2px;padding:40px 36px;">
 
-              <p style="margin:0 0 6px;font-size:24px;color:#031926;line-height:1.3;">
+              <p style="margin:0 0 6px;font-size:24px;color:#1A1512;line-height:1.3;">
                 Merci ${firstName} 🥭
               </p>
               <p style="margin:0 0 4px;font-size:13px;color:rgba(3,25,38,0.5);">
@@ -112,10 +112,10 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
               <table width="100%" cellpadding="0" cellspacing="0">
                 ${itemRows}
                 <tr>
-                  <td style="padding-top:12px;font-size:15px;font-weight:bold;color:#031926;">
+                  <td style="padding-top:12px;font-size:15px;font-weight:bold;color:#1A1512;">
                     Total
                   </td>
-                  <td style="padding-top:12px;font-size:15px;font-weight:bold;color:#031926;text-align:right;">
+                  <td style="padding-top:12px;font-size:15px;font-weight:bold;color:#1A1512;text-align:right;">
                     ${centsToEur(order.subtotal)} €
                   </td>
                 </tr>
@@ -130,7 +130,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
                 <span style="font-size:12px;color:rgba(3,25,38,0.4);">您可以隨時查看訂單狀態：</span>
               </p>
               <a href="${trackingUrl}"
-                 style="display:inline-block;background:#031926;color:#FFA630;font-size:12px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:12px 24px;border-radius:2px;">
+                 style="display:inline-block;background:#1A1512;color:#FACA31;font-size:12px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;padding:12px 24px;border-radius:2px;">
                 Voir ma commande · 查看訂單 →
               </a>
 
@@ -147,7 +147,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
           <!-- Footer -->
           <tr>
             <td style="padding-top:24px;text-align:center;">
-              <p style="margin:0;font-size:11px;color:#031926;opacity:0.4;letter-spacing:0.08em;">
+              <p style="margin:0;font-size:11px;color:#1A1512;opacity:0.4;letter-spacing:0.08em;">
                 © 2025 Chez Jambes Courtes · Paris
               </p>
             </td>
@@ -183,8 +183,8 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bienvenue</title>
 </head>
-<body style="margin:0;padding:0;background:#FFA630;font-family:Georgia,serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFA630;padding:48px 24px;">
+<body style="margin:0;padding:0;background:#FACA31;font-family:Georgia,serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FACA31;padding:48px 24px;">
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
@@ -192,7 +192,7 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
           <!-- Header -->
           <tr>
             <td style="padding-bottom:32px;">
-              <p style="margin:0;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#031926;opacity:0.6;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:#1A1512;opacity:0.6;">
                 Chez Jambes Courtes
               </p>
             </td>
@@ -202,17 +202,17 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
           <tr>
             <td style="background:#ffffff;border:1px solid rgba(3,25,38,0.15);border-radius:2px;padding:40px 36px;">
 
-              <p style="margin:0 0 24px;font-size:24px;color:#031926;line-height:1.3;">
+              <p style="margin:0 0 24px;font-size:24px;color:#1A1512;line-height:1.3;">
                 ${greeting} 🍊
               </p>
 
-              <p style="margin:0 0 16px;font-size:15px;color:#031926;line-height:1.7;opacity:0.85;">
+              <p style="margin:0 0 16px;font-size:15px;color:#1A1512;line-height:1.7;opacity:0.85;">
                 Votre inscription est bien enregistrée.
                 Vous serez parmi les premiers à savoir dès la première livraison —
                 mangues de Taïwan, litchis parfumés et pitayas rouges.
               </p>
 
-              <p style="margin:0 0 32px;font-size:13px;color:#031926;line-height:1.7;opacity:0.55;">
+              <p style="margin:0 0 32px;font-size:13px;color:#1A1512;line-height:1.7;opacity:0.55;">
                 ${greetingZh}！<br />
                 您的訂閱已成功建立。<br />
                 台灣芒果、荔枝、紅火龍果——第一批到貨時，我們會立即通知您。
@@ -220,12 +220,12 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
 
               <hr style="border:none;border-top:1px dashed rgba(3,25,38,0.12);margin:0 0 28px;" />
 
-              <p style="margin:0;font-size:12px;color:#031926;opacity:0.4;line-height:1.8;">
+              <p style="margin:0;font-size:12px;color:#1A1512;opacity:0.4;line-height:1.8;">
                 Vous recevez cet e-mail car vous vous êtes inscrit sur chezjambescourtes.com.<br />
                 Pour vous désabonner :
-                <a href="${unsubscribeUrl}" style="color:#031926;opacity:0.6;text-decoration:underline;">cliquez ici</a>.<br />
+                <a href="${unsubscribeUrl}" style="color:#1A1512;opacity:0.6;text-decoration:underline;">cliquez ici</a>.<br />
                 <span style="font-size:11px;">如需退訂，請
-                  <a href="${unsubscribeUrl}" style="color:#031926;opacity:0.6;text-decoration:underline;">點此取消訂閱</a>。
+                  <a href="${unsubscribeUrl}" style="color:#1A1512;opacity:0.6;text-decoration:underline;">點此取消訂閱</a>。
                 </span>
               </p>
 
@@ -235,7 +235,7 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
           <!-- Footer -->
           <tr>
             <td style="padding-top:24px;text-align:center;">
-              <p style="margin:0;font-size:11px;color:#031926;opacity:0.4;letter-spacing:0.08em;">
+              <p style="margin:0;font-size:11px;color:#1A1512;opacity:0.4;letter-spacing:0.08em;">
                 © 2025 Chez Jambes Courtes · Paris
               </p>
             </td>

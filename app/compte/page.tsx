@@ -15,7 +15,7 @@ export const metadata = { title: 'Mon compte · 我的帳號 — Chez Jambes Cou
 type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS_LABEL: Record<OrderStatus, { fr: string; zh: string; color: string }> = {
-  received:          { fr: 'Reçue',                    zh: '已收到',   color: 'bg-orange/20 text-midnight' },
+  received:          { fr: 'Reçue',                    zh: '已收到',   color: 'bg-yellow/20 text-midnight' },
   accepted:          { fr: 'Acceptée',                 zh: '已接受',   color: 'bg-blue-50 text-blue-700' },
   processing:        { fr: 'En traitement',             zh: '處理中',   color: 'bg-blue-50 text-blue-700' },
   validated:         { fr: 'Validée',                  zh: '已確認',   color: 'bg-green-50 text-green-700' },
@@ -124,13 +124,7 @@ export default async function ComptePage() {
   const deleteAccount = deleteAccountAction.bind(null, user.id)
 
   return (
-    <main
-      className="min-h-screen bg-orange/30 px-4 py-10"
-      style={{
-        backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-        backgroundSize: '28px 28px',
-      }}
-    >
+    <main className="min-h-screen bg-white px-4 py-10">
       <div className="max-w-lg mx-auto space-y-5">
 
         {/* Header */}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Footer from '../_components/Footer'
 
 const faqs: { zh: string; fr: string; answerZh: string; answerFr: string }[] = [
   {
@@ -102,7 +103,7 @@ export default function FaqPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section
-        className="bg-orange px-8 py-14 text-center"
+        className="bg-yellow px-8 py-14 text-center"
         style={{
           backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
           backgroundSize: '28px 28px',
@@ -140,7 +141,7 @@ export default function FaqPage() {
         <div className="pt-6 flex flex-wrap gap-4 text-sm">
           <Link
             href="/comment-acheter"
-            className="px-5 py-2.5 bg-midnight text-orange font-bold rounded-full hover:bg-orange hover:text-midnight transition-colors duration-200"
+            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
           >
             購買流程 →
           </Link>
@@ -153,10 +154,7 @@ export default function FaqPage() {
         </div>
       </section>
 
-      <footer className="bg-midnight text-center px-8 py-10 text-sm text-white/40 tracking-[0.08em] leading-loose">
-        <p className="text-white/70">Chez Jambes Courtes · Paris</p>
-        <p className="mt-2 opacity-50">© 2025 · Mentions légales · 隱私政策</p>
-      </footer>
+      <Footer />
     </main>
   )
 }

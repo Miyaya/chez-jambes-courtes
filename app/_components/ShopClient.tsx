@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from './CartProvider'
+import Footer from './Footer'
 
 export type PublicProduct = {
   id: string
@@ -31,7 +32,7 @@ function centsToEur(cents: number) {
 function Placeholder({ name }: { name: string }) {
   return (
     <div className="w-full h-full bg-midnight flex items-center justify-center">
-      <span className="text-orange text-4xl font-bold select-none">{name[0]}</span>
+      <span className="text-yellow text-4xl font-bold select-none">{name[0]}</span>
     </div>
   )
 }
@@ -53,7 +54,7 @@ function flyToCartIcon(sourceEl: HTMLElement) {
     width: '12px',
     height: '12px',
     borderRadius: '50%',
-    background: '#FFA630',
+    background: '#FACA31',
     zIndex: '9999',
     pointerEvents: 'none',
     left: `${sx - 6}px`,
@@ -146,7 +147,7 @@ function DetailContent({
         <div className="flex items-center gap-2 mt-4">
           <button
             onClick={() => setQty(q => Math.max(1, q - 1))}
-            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors"
+            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors"
           >
             −
           </button>
@@ -154,7 +155,7 @@ function DetailContent({
           <button
             onClick={() => setQty(q => Math.min(maxAdditional, q + 1))}
             disabled={qty >= maxAdditional}
-            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             +
           </button>
@@ -168,7 +169,7 @@ function DetailContent({
           ref={addBtnRef}
           onClick={handleAdd}
           disabled={maxAdditional <= 0}
-          className="mt-3 w-full bg-midnight text-orange font-bold text-xs uppercase tracking-wider py-3 rounded-xl hover:bg-orange hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="mt-3 w-full bg-midnight text-yellow font-bold text-xs uppercase tracking-wider py-3 rounded-xl hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {maxAdditional <= 0 ? 'Stock épuisé · 已售完' : 'Ajouter au panier'}
         </button>
@@ -251,7 +252,7 @@ function ProductCard({
         >
           <button
             onClick={() => setQty(q => Math.max(1, q - 1))}
-            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors [touch-action:manipulation]"
+            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors [touch-action:manipulation]"
           >
             −
           </button>
@@ -259,7 +260,7 @@ function ProductCard({
           <button
             onClick={() => setQty(q => Math.min(maxAdditional, q + 1))}
             disabled={qty >= maxAdditional}
-            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-orange hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed [touch-action:manipulation]"
+            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed [touch-action:manipulation]"
           >
             +
           </button>
@@ -273,7 +274,7 @@ function ProductCard({
           ref={addBtnRef}
           onClick={handleAdd}
           disabled={maxAdditional <= 0}
-          className="mt-3 sm:mt-2 w-full bg-midnight text-orange text-sm sm:text-[0.65rem] font-bold uppercase tracking-wide py-3 sm:py-1.5 rounded-lg hover:bg-orange hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed [touch-action:manipulation]"
+          className="mt-3 sm:mt-2 w-full bg-midnight text-yellow text-sm sm:text-[0.65rem] font-bold uppercase tracking-wide py-3 sm:py-1.5 rounded-lg hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed [touch-action:manipulation]"
         >
           {maxAdditional <= 0 ? '已售完' : 'Ajouter'}
         </button>
@@ -292,7 +293,7 @@ export default function ShopClient({ products, hero }: { products: PublicProduct
       {/* Hero */}
       {hero && (
         <section
-          className="bg-orange px-8 py-20"
+          className="bg-yellow px-8 py-20"
           style={{
             backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
             backgroundSize: '28px 28px',
@@ -360,10 +361,7 @@ export default function ShopClient({ products, hero }: { products: PublicProduct
         </div>
       )}
 
-      <footer className="bg-midnight text-center px-8 py-10 text-sm text-white/40 tracking-[0.08em] leading-loose mt-auto">
-        <p className="text-white/70">Chez Jambes Courtes · Paris</p>
-        <p className="mt-2 opacity-50">© 2025 · Mentions légales · 隱私政策</p>
-      </footer>
+      <Footer className="mt-auto" />
     </main>
   )
 }

@@ -32,5 +32,23 @@
   },
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "staging": {
+      "name": "chez-jambes-courtes-staging",
+      "vars": {
+        "NEXT_PUBLIC_APP_URL": "https://staging.chezjambescourtes.com",
+        "NEXT_PUBLIC_SUPABASE_URL": "https://wmrcmztfbbdyigsopjcw.supabase.co",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Ia0e4XPxsMxK_6RSKFFqkQ_fgcK7zr0",
+        "RESEND_FROM": "Chez Jambes Courtes Staging <hello@chezjambescourtes.com>"
+      },
+      "services": [
+        {
+          "binding": "WORKER_SELF_REFERENCE",
+          "service": "chez-jambes-courtes-staging",
+          "environment": "staging"
+        }
+      ]
+    }
   }
 }

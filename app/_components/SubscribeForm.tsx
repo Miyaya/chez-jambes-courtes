@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { subscribeAction } from '@/app/actions'
 
 const inputClass =
-  'w-full border border-orange/50 rounded-sm px-3 py-2.5 text-base text-midnight bg-transparent outline-none focus:border-magenta placeholder:text-midnight/30 transition-colors'
+  'w-full border border-yellow/50 rounded-sm px-3 py-2.5 text-base text-midnight bg-transparent outline-none focus:border-magenta placeholder:text-midnight/30 transition-colors'
 
 const labelClass =
   'block text-[0.72rem] uppercase tracking-[0.12em] text-midnight/60 mb-1.5 font-medium'
@@ -89,7 +89,7 @@ export default function SubscribeForm() {
           id="consent"
           checked={consent}
           onChange={e => setConsent(e.target.checked)}
-          className="mt-0.5 shrink-0 accent-orange w-4 h-4"
+          className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
         />
         <label htmlFor="consent" className="text-xs text-midnight/55 leading-relaxed cursor-pointer">
           J&apos;accepte de recevoir des notifications de Chez Jambes Courtes.

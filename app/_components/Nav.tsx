@@ -6,15 +6,6 @@ import type { User } from '@supabase/supabase-js'
 import { useCart } from './CartProvider'
 import { createClient } from '@/lib/supabase/browser'
 
-function UserIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  )
-}
-
 function CartIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
@@ -70,31 +61,31 @@ export default function Nav() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const dropdownBg = scrolled ? 'bg-midnight border-white/10' : 'bg-orange border-midnight/10'
+  const dropdownBg = scrolled ? 'bg-dark-green border-white/10' : 'bg-green border-midnight/10'
   const dropdownItem = scrolled ? 'text-white hover:bg-white/10' : 'text-midnight hover:bg-midnight/10'
 
   return (
-    <header className={`z-50 transition-colors duration-300 ${scrolled ? 'bg-midnight' : 'bg-orange'}`}>
-      <div className="mx-auto w-full max-w-xl px-8 py-4 flex items-center justify-between">
+    <header className={`relative z-50 transition-colors duration-300 ${scrolled ? 'bg-dark-green' : 'bg-green'}`}>
+      <div className="mx-auto w-full max-w-xl px-8 pt-4 pb-3 md:py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0">
         <Link
           href="/"
-          className={`text-base font-bold tracking-[0.14em] uppercase transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
+          className={`text-base font-bold tracking-[0.14em] uppercase transition-colors duration-300 text-center md:text-left ${scrolled ? 'text-white' : 'text-midnight'}`}
         >
           Chez Jambes Courtes
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 justify-end md:justify-start w-full md:w-auto">
           {/* 購買 dropdown */}
           <div ref={shopRef} className="relative">
             <button
               onClick={() => { setShopOpen(o => !o); setBurgerOpen(false) }}
               className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 flex items-center gap-1 ${
                 scrolled
-                  ? 'border-orange text-orange hover:bg-orange hover:text-midnight'
-                  : 'border-midnight text-midnight hover:bg-midnight hover:text-orange'
+                  ? 'border-white/60 text-white hover:bg-white/10 hover:border-white'
+                  : 'border-midnight text-midnight hover:bg-midnight hover:text-white hover:border-midnight'
               }`}
             >
-              <span>購買 <span className="font-normal opacity-60">· Acheter</span></span>
+              <span>購買 <span className="font-semibold">· Acheter</span></span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 transition-transform duration-200 ${shopOpen ? 'rotate-180' : ''}`} aria-hidden="true">
                 <path d="M6 9l6 6 6-6" />
               </svg>
@@ -103,11 +94,11 @@ export default function Nav() {
               <div className={`absolute right-0 top-full mt-2 min-w-[9rem] rounded-xl border shadow-lg overflow-hidden ${dropdownBg}`}>
                 <Link href="/instock" onClick={() => setShopOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-bold tracking-[0.08em]">現貨</p>
-                  <p className="text-[10px] opacity-50 font-normal">En stock</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">En stock</p>
                 </Link>
                 <Link href="/preorder" onClick={() => setShopOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-bold tracking-[0.08em]">預購</p>
-                  <p className="text-[10px] opacity-50 font-normal">Précommande</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Précommande</p>
                 </Link>
               </div>
             )}
@@ -128,57 +119,44 @@ export default function Nav() {
             )}
           </button>
 
-          {/* Account icon — only shown when logged OUT */}
-          {!user && (
-            <Link
-              href="/connexion"
-              className={`transition-colors duration-300 ${scrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
-              aria-label="Se connecter · 登入"
-            >
-              <UserIcon />
-            </Link>
-          )}
-
           {/* Burger */}
-          <div ref={burgerRef} className="relative">
+          <div ref={burgerRef} className="relative flex items-center">
             <button
               onClick={() => { setBurgerOpen(o => !o); setShopOpen(false) }}
-              className={`transition-colors duration-300 ${scrolled ? 'text-white/70 hover:text-white' : 'text-midnight/50 hover:text-midnight'}`}
+              className={`transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
               aria-label="選單"
             >
               <BurgerIcon />
             </button>
             {burgerOpen && (
               <div className={`absolute right-0 top-full mt-2 min-w-[10rem] rounded-xl border shadow-lg overflow-hidden ${dropdownBg}`}>
-                {user && (
+                {user ? (
                   <Link href="/compte" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                     <p className="text-sm font-bold tracking-[0.08em]">個人資訊</p>
-                    <p className="text-[10px] opacity-50 font-normal">Mon compte</p>
+                    <p className="text-sm font-semibold tracking-[0.08em]">Mon compte</p>
+                  </Link>
+                ) : (
+                  <Link href="/connexion" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                    <p className="text-sm font-bold tracking-[0.08em]">登入</p>
+                    <p className="text-sm font-semibold tracking-[0.08em]">Se connecter</p>
                   </Link>
                 )}
                 <Link href="/comment-acheter" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-bold tracking-[0.08em]">購買流程</p>
-                  <p className="text-[10px] opacity-50 font-normal">Comment acheter</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Comment acheter</p>
                 </Link>
                 <Link href="/faq" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-bold tracking-[0.08em]">FAQ</p>
-                  <p className="text-[10px] opacity-50 font-normal">Questions fréquentes</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Questions fréquentes</p>
                 </Link>
                 <Link href="/contact" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-bold tracking-[0.08em]">聯絡我們</p>
-                  <p className="text-[10px] opacity-50 font-normal">Nous contacter</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Nous contacter</p>
                 </Link>
               </div>
             )}
           </div>
         </div>
-      </div>
-
-      {/* Wave bottom edge */}
-      <div aria-hidden="true" className={`absolute top-full left-0 right-0 h-7 pointer-events-none transition-opacity duration-300 ${scrolled ? 'opacity-100' : 'opacity-0'}`}>
-        <svg viewBox="0 0 1440 28" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="block w-full h-full">
-          <path d="M0,0 L1440,0 L1440,20 C1402,14 1342,24 1264,12 C1124,0 1042,22 902,10 C762,22 696,4 572,16 C448,24 386,6 294,16 C168,24 82,8 0,16 Z" fill="#031926" />
-        </svg>
       </div>
     </header>
   )

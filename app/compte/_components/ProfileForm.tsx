@@ -49,7 +49,7 @@ export function ProfileForm({ customerId, prenom, nom, phone }: Props) {
       <button
         type="submit"
         disabled={pending}
-        className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-midnight text-orange hover:bg-orange hover:text-midnight border-2 border-midnight transition-colors disabled:opacity-50"
+        className="text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-midnight text-yellow hover:bg-yellow hover:text-midnight border-2 border-midnight transition-colors disabled:opacity-50"
       >
         {pending ? 'Enregistrement…' : 'Enregistrer · 儲存'}
       </button>

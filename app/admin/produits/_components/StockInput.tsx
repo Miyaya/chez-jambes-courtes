@@ -33,14 +33,14 @@ export function StockInput({ productId, defaultValue }: { productId: string; def
             onChange={e => setIsDirty(e.target.value !== String(defaultValue))}
             className={`w-16 text-sm font-bold border rounded-lg px-2 py-1 focus:outline-none focus:ring-2 tabular-nums transition-colors ${
               isDirty
-                ? 'border-orange text-orange focus:ring-orange/30'
+                ? 'border-yellow text-yellow focus:ring-yellow/30'
                 : 'border-midnight/15 text-midnight focus:ring-midnight/20'
             }`}
           />
           <button
             type="submit"
             className={`text-xs underline underline-offset-2 transition-colors ${
-              isDirty ? 'text-orange font-bold hover:text-orange/70' : 'text-midnight/40 hover:text-midnight'
+              isDirty ? 'text-yellow font-bold hover:text-yellow/70' : 'text-midnight/40 hover:text-midnight'
             }`}
           >
             Enregistrer

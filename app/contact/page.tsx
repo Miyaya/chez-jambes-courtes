@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import Footer from '../_components/Footer'
 
 function FieldError({ msg }: { msg: string | null }) {
   if (!msg) return null
@@ -55,7 +56,7 @@ export default function ContactPage() {
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section
-        className="bg-orange px-8 py-14 text-center"
+        className="bg-yellow px-8 py-14 text-center"
         style={{
           backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
           backgroundSize: '28px 28px',
@@ -125,7 +126,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="px-6 py-2.5 bg-midnight text-orange font-bold text-sm rounded-full hover:bg-orange hover:text-midnight transition-colors duration-200 disabled:opacity-50"
+                className="px-6 py-2.5 bg-midnight text-yellow font-bold text-sm rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-50"
               >
                 {status === 'sending' ? '傳送中…' : '傳送 · Envoyer'}
               </button>
@@ -161,7 +162,7 @@ export default function ContactPage() {
         <div className="flex flex-wrap gap-4 text-sm">
           <Link
             href="/faq"
-            className="px-5 py-2.5 bg-midnight text-orange font-bold rounded-full hover:bg-orange hover:text-midnight transition-colors duration-200"
+            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
           >
             常見問題 FAQ →
           </Link>
@@ -174,10 +175,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <footer className="bg-midnight text-center px-8 py-10 text-sm text-white/40 tracking-[0.08em] leading-loose">
-        <p className="text-white/70">Chez Jambes Courtes · Paris</p>
-        <p className="mt-2 opacity-50">© 2025 · Mentions légales · 隱私政策</p>
-      </footer>
+      <Footer />
     </main>
   )
 }

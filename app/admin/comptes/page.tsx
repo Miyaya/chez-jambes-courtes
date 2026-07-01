@@ -54,7 +54,7 @@ export default async function ClientsAdminPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       {!customer.has_complete_order && (
-                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-orange text-midnight px-1.5 py-0.5 rounded-full leading-none">
+                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-yellow text-midnight px-1.5 py-0.5 rounded-full leading-none">
                           New
                         </span>
                       )}
@@ -71,7 +71,7 @@ export default async function ClientsAdminPage() {
                   <td className="px-4 py-3">
                     {/* @ts-expect-error — Supabase nested select returns object not array */}
                     {customer.subscribers?.active === true ? (
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange/30 text-midnight">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-yellow/30 text-midnight">
                         Actif
                       </span>
                     ) : customer.subscriber_id ? (

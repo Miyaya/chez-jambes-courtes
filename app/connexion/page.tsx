@@ -28,14 +28,10 @@ function ConnexionForm() {
   }
 
   return (
-    <main
-      className="flex flex-col min-h-screen bg-orange items-center justify-center px-6 py-16"
-      style={{
-        backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-        backgroundSize: '28px 28px',
-      }}
-    >
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
+    <main className="flex flex-col min-h-screen bg-white items-center justify-center px-6 py-16">
+      <div className="w-full max-w-sm bg-white border border-midnight/10 rounded-2xl shadow-xl overflow-hidden">
+        <div className="h-1.5 bg-yellow" />
+        <div className="p-8">
         <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 mb-6 text-center">
           Chez Jambes Courtes
         </p>
@@ -70,6 +66,7 @@ function ConnexionForm() {
           <br />
           登入即表示您同意我們的使用條款。
         </p>
+        </div>
       </div>
     </main>
   )

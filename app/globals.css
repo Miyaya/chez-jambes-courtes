@@ -11,9 +11,12 @@
   --font-sans: var(--font-chiron);
   --font-mono: var(--font-geist-mono);
 
-  --color-orange: #FFA630;
-  --color-midnight: #031926;
-  --color-magenta: #EC0868;
+  --color-yellow: #FACA31;
+  --color-midnight: #1A1512;
+  --color-magenta: #F5736E;
+  --color-green: #AFC949;
+  --color-dark-green: #84A339;
+  --color-orange: #F94630;
 
   --animate-marquee: marquee-left 28s linear infinite;
 }
@@ -22,12 +25,12 @@ html {
   font-size: 17px;
 }
 
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
 body {
   background: var(--background);

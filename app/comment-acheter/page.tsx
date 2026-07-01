@@ -1,11 +1,12 @@
 import Link from 'next/link'
+import Footer from '../_components/Footer'
 
 export default function CommentAcheterPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
       <section
-        className="bg-orange px-8 py-14 text-center"
+        className="bg-yellow px-8 py-14 text-center"
         style={{
           backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
           backgroundSize: '28px 28px',
@@ -22,7 +23,7 @@ export default function CommentAcheterPage() {
           <li className="flex gap-6">
             <div className="flex flex-col items-center shrink-0">
               <div className="w-10 h-10 rounded-full bg-midnight flex items-center justify-center shrink-0">
-                <span className="text-orange text-xs font-bold tabular-nums">01</span>
+                <span className="text-yellow text-xs font-bold tabular-nums">01</span>
               </div>
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
@@ -71,7 +72,7 @@ export default function CommentAcheterPage() {
           <li className="flex gap-6">
             <div className="flex flex-col items-center shrink-0">
               <div className="w-10 h-10 rounded-full bg-midnight flex items-center justify-center shrink-0">
-                <span className="text-orange text-xs font-bold tabular-nums">02</span>
+                <span className="text-yellow text-xs font-bold tabular-nums">02</span>
               </div>
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
@@ -91,7 +92,7 @@ export default function CommentAcheterPage() {
           <li className="flex gap-6">
             <div className="flex flex-col items-center shrink-0">
               <div className="w-10 h-10 rounded-full bg-midnight flex items-center justify-center shrink-0">
-                <span className="text-orange text-xs font-bold tabular-nums">03</span>
+                <span className="text-yellow text-xs font-bold tabular-nums">03</span>
               </div>
             </div>
             <div className="pt-1.5 pb-6">
@@ -138,7 +139,7 @@ export default function CommentAcheterPage() {
         <div className="mt-12 flex flex-wrap gap-4 text-sm">
           <Link
             href="/instock"
-            className="px-5 py-2.5 bg-midnight text-orange font-bold rounded-full hover:bg-orange hover:text-midnight transition-colors duration-200"
+            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
           >
             現貨商品 →
           </Link>
@@ -151,10 +152,7 @@ export default function CommentAcheterPage() {
         </div>
       </section>
 
-      <footer className="bg-midnight text-center px-8 py-10 text-sm text-white/40 tracking-[0.08em] leading-loose">
-        <p className="text-white/70">Chez Jambes Courtes · Paris</p>
-        <p className="mt-2 opacity-50">© 2025 · Mentions légales · 隱私政策</p>
-      </footer>
+      <Footer />
     </main>
   )
 }

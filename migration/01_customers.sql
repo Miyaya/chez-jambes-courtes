@@ -1,28 +1,3 @@
--- subscribers
-
-CREATE TABLE IF NOT EXISTS subscribers (
-  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  email       text        NOT NULL UNIQUE,
-  name        text,
-  source      text        NOT NULL DEFAULT 'manual'
-                          CHECK (source IN ('prelaunch', 'checkout', 'manual')),
-  active      boolean     NOT NULL DEFAULT true,
-  created_at  timestamptz NOT NULL DEFAULT now(),
-  updated_at  timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TRIGGER subscribers_set_updated_at
-  BEFORE UPDATE ON subscribers
-  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
--- RLS
-ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
-
--- Allow unauthenticated inserts from the public form
-CREATE POLICY "public_insert" ON subscribers
-  FOR INSERT TO anon
-  WITH CHECK (true);
-
 -- customers
 
 CREATE TABLE IF NOT EXISTS customers (

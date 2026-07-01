@@ -2,13 +2,9 @@ import Link from 'next/link'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderConfirmationEmail } from '@/lib/email'
+import Footer from '@/app/_components/Footer'
 
 export const metadata = { title: 'Commande confirmée — Chez Jambes Courtes' }
-
-const dotBg = {
-  backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-  backgroundSize: '28px 28px',
-}
 
 type ItemSnapshot = {
   product_id: string
@@ -27,32 +23,16 @@ function centsToEur(cents: number) {
 
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex flex-col min-h-screen">
-      <div
-        className="flex-1 bg-orange flex flex-col items-center justify-center px-6 py-16 text-midnight"
-        style={dotBg}
-      >
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden p-8">
-          {children}
+    <main className="flex flex-col min-h-screen bg-white">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-midnight">
+        <div className="w-full max-w-md bg-white border border-midnight/10 rounded-2xl shadow-xl overflow-hidden">
+          <div className="h-1.5 bg-green" />
+          <div className="p-8">
+            {children}
+          </div>
         </div>
       </div>
-      <div className="bg-orange overflow-hidden leading-none">
-        <svg
-          viewBox="0 0 1440 64"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          className="block w-full h-14 sm:h-16"
-        >
-          <path
-            d="M0,44 C82,26 168,58 294,38 C386,22 448,52 572,32 C696,12 762,50 902,28 C1042,6 1124,46 1264,24 C1342,12 1402,36 1440,28 L1440,64 L0,64 Z"
-            fill="#031926"
-          />
-        </svg>
-      </div>
-      <footer className="bg-midnight text-center px-8 py-10 text-sm text-white/40 tracking-[0.08em] leading-loose">
-        <p className="text-white/70">Chez Jambes Courtes · Paris</p>
-        <p className="mt-2 opacity-50">© 2025 · Mentions légales · 隱私政策</p>
-      </footer>
+      <Footer />
     </main>
   )
 }
@@ -134,7 +114,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         )}
 
         {order?.pickup_slots && (
-          <div className="bg-orange/20 rounded-xl px-4 py-3 mb-5 text-center">
+          <div className="bg-yellow/20 rounded-xl px-4 py-3 mb-5 text-center">
             <p className="text-xs uppercase tracking-wider text-midnight/50 mb-1">Retrait · 取貨時段</p>
             {/* @ts-expect-error — nested select */}
             <p className="text-sm font-bold text-midnight">{order.pickup_slots.label}</p>
@@ -320,7 +300,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
 
       {/* Pickup slot */}
       {order?.pickup_slots && (
-        <div className="bg-orange/20 rounded-xl px-4 py-3 mb-6 text-center">
+        <div className="bg-yellow/20 rounded-xl px-4 py-3 mb-6 text-center">
           <p className="text-xs uppercase tracking-wider text-midnight/50 mb-1">
             Retrait · 取貨時段
           </p>

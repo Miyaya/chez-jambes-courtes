@@ -8,7 +8,7 @@ type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'parti
 type OrderFlag = 'shortage' | 'contact_needed' | 'postponed' | 'others' | 'no_show'
 
 const STATUS: Record<OrderStatus, { label: string; color: string }> = {
-  received:          { label: 'Reçue',                color: 'bg-orange/20 text-midnight' },
+  received:          { label: 'Reçue',                color: 'bg-yellow/20 text-midnight' },
   accepted:          { label: 'Acceptée',              color: 'bg-blue-50 text-blue-700' },
   processing:        { label: 'En traitement',          color: 'bg-blue-100 text-blue-800' },
   validated:         { label: 'Validée',               color: 'bg-green-50 text-green-700' },
@@ -148,7 +148,7 @@ export function CommandesTable({
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       {isNew && (
-                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-orange text-midnight px-1.5 py-0.5 rounded-full leading-none">
+                        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-yellow text-midnight px-1.5 py-0.5 rounded-full leading-none">
                           New
                         </span>
                       )}
@@ -297,7 +297,7 @@ export function CommandesTable({
               </div>
 
               {openOrder.pickup_slots && (
-                <div className="bg-orange/15 rounded-xl p-4 mb-4">
+                <div className="bg-yellow/15 rounded-xl p-4 mb-4">
                   <p className="text-xs uppercase tracking-wider text-midnight/40 mb-1">Créneau de retrait</p>
                   <p className="font-bold text-midnight text-sm">{openOrder.pickup_slots.label}</p>
                   {openOrder.pickup_slots.location && (

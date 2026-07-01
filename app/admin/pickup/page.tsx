@@ -6,7 +6,7 @@ export const metadata = { title: 'Pickup — Admin' }
 type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS_LABEL: Record<OrderStatus, { zh: string; color: string }> = {
-  received:          { zh: '已收到',   color: 'bg-orange/20 text-midnight' },
+  received:          { zh: '已收到',   color: 'bg-yellow/20 text-midnight' },
   accepted:          { zh: '已接受',   color: 'bg-blue-50 text-blue-700' },
   processing:        { zh: '處理中',   color: 'bg-blue-50 text-blue-700' },
   validated:         { zh: '已確認',   color: 'bg-green-50 text-green-700' },

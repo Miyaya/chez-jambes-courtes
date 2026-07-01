@@ -6,7 +6,7 @@ import { fetchCustomerOrdersAction } from '../actions'
 type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS: Record<OrderStatus, { label: string; color: string }> = {
-  received:          { label: 'Reçue',          color: 'bg-orange/20 text-midnight' },
+  received:          { label: 'Reçue',          color: 'bg-yellow/20 text-midnight' },
   accepted:          { label: 'Acceptée',        color: 'bg-blue-50 text-blue-700' },
   processing:        { label: 'En traitement',   color: 'bg-blue-100 text-blue-800' },
   validated:         { label: 'Validée',         color: 'bg-green-50 text-green-700' },

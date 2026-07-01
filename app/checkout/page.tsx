@@ -45,6 +45,81 @@ const PAYMENT_OPTIONS: {
   },
 ]
 
+function OrderSummaryBox({
+  titleZh,
+  titleFr,
+  orderItems,
+  products,
+  selected,
+  onSelect,
+  showSelector,
+  note,
+}: {
+  titleZh: string
+  titleFr: string
+  orderItems: [string, number][]
+  products: Record<string, { name_tw: string; name_fr: string; unit_price: number; unit_label: string }>
+  selected: boolean
+  onSelect: () => void
+  showSelector: boolean
+  note?: string
+}) {
+  const total = orderItems.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
+
+  return (
+    <div
+      onClick={showSelector ? onSelect : undefined}
+      className={`bg-white rounded-2xl shadow-xl p-6 transition-colors ${
+        showSelector
+          ? selected
+            ? 'border-2 border-midnight cursor-pointer'
+            : 'border-2 border-midnight/10 hover:border-midnight/30 cursor-pointer'
+          : 'border border-midnight/10'
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        {showSelector && (
+          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+            selected ? 'border-midnight bg-midnight' : 'border-midnight/30'
+          }`}>
+            {selected && <span className="w-1.5 h-1.5 rounded-full bg-yellow block" />}
+          </span>
+        )}
+        <h2 className="font-bold text-midnight text-xs uppercase tracking-wider">
+          {titleZh} · {titleFr}
+        </h2>
+      </div>
+
+      <div className="space-y-3">
+        {orderItems.map(([id, qty]) => {
+          const p = products[id]
+          if (!p) return null
+          return (
+            <div key={id} className="flex justify-between items-start gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-midnight leading-tight">{p.name_tw}</p>
+                <p className="text-xs text-midnight/40">
+                  {p.name_fr} × {qty} {p.unit_label}
+                </p>
+              </div>
+              <p className="text-sm font-bold text-midnight tabular-nums shrink-0">
+                {centsToEur(p.unit_price * qty)} €
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="border-t border-midnight/10 mt-4 pt-4 flex justify-between">
+        <p className="text-sm font-bold text-midnight">Total</p>
+        <p className="text-sm font-bold text-midnight tabular-nums">{centsToEur(total)} €</p>
+      </div>
+
+      {note && <p className="text-xs text-midnight/30 mt-3 leading-relaxed">{note}</p>}
+    </div>
+  )
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { cart, products } = useCart()
@@ -61,12 +136,16 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loggedIn, setLoggedIn] = useState(false)
+  const [selectedOrderType, setSelectedOrderType] = useState<'instock' | 'preorder'>('instock')
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
-  const subtotal = items.reduce(
-    (sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty,
-    0,
-  )
+  const instockItems = items.filter(([id]) => products[id]?.stock_quantity != null)
+  const preorderItems = items.filter(([id]) => products[id]?.stock_quantity == null)
+  const hasBoth = instockItems.length > 0 && preorderItems.length > 0
+
+  const activeItems = hasBoth
+    ? (selectedOrderType === 'instock' ? instockItems : preorderItems)
+    : items
 
   useEffect(() => {
     if (items.length === 0) router.replace('/')
@@ -126,7 +205,7 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cartItems: items.map(([id, qty]) => ({ id, qty })),
+          cartItems: activeItems.map(([id, qty]) => ({ id, qty })),
           customer: {
             prenom: firstName.trim(),
             nom: lastName.trim(),
@@ -158,20 +237,23 @@ export default function CheckoutPage() {
   if (items.length === 0) return null
 
   return (
-    <main
-      className="min-h-screen bg-orange"
-      style={{
-        backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-        backgroundSize: '28px 28px',
-      }}
-    >
+    <main className="min-h-screen bg-white">
       <div className="max-w-3xl mx-auto px-4 py-12">
         <Link
           href="/"
-          className="inline-block text-xs uppercase tracking-[0.14em] text-midnight/50 hover:text-midnight transition-colors mb-8"
+          className="inline-block text-xs uppercase tracking-[0.14em] text-midnight/50 hover:text-midnight transition-colors mb-6"
         >
           ← Retour · 返回
         </Link>
+
+        {/* Warning banner — always shown */}
+        <div className="mb-6 bg-red-600 text-white rounded-xl px-4 py-3">
+          <p className="text-sm font-bold mb-0.5">⚠️ 現貨與預購需分開結帳</p>
+          <p className="text-xs text-white/80 leading-relaxed">
+            Les articles en stock et en précommande doivent être passés en deux commandes séparées.
+            {hasBoth && ' Sélectionnez ci-dessous quelle commande vous souhaitez passer maintenant. · 請選擇您本次要結帳的品項。'}
+          </p>
+        </div>
 
         <h1 className="text-2xl font-bold text-midnight mb-8 tracking-tight">
           Récapitulatif · 結帳確認
@@ -179,7 +261,7 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6 items-start">
           {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="bg-white border border-midnight/10 rounded-2xl shadow-xl p-6 space-y-5">
             <h2 className="font-bold text-midnight text-xs uppercase tracking-wider">
               Vos coordonnées · 聯絡資料
             </h2>
@@ -342,7 +424,7 @@ export default function CheckoutPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-midnight text-orange font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-orange hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading
                 ? 'Chargement… · 處理中…'
@@ -359,39 +441,41 @@ export default function CheckoutPage() {
           </form>
 
           {/* Order summary */}
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="font-bold text-midnight text-xs uppercase tracking-wider mb-4">
-              Votre commande · 訂單
-            </h2>
-            <div className="space-y-3">
-              {items.map(([id, qty]) => {
-                const p = products[id]
-                if (!p) return null
-                return (
-                  <div key={id} className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-midnight leading-tight">{p.name_tw}</p>
-                      <p className="text-xs text-midnight/40">
-                        {p.name_fr} × {qty} {p.unit_label}
-                      </p>
-                    </div>
-                    <p className="text-sm font-bold text-midnight tabular-nums shrink-0">
-                      {centsToEur(p.unit_price * qty)} €
-                    </p>
-                  </div>
-                )
-              })}
+          {hasBoth ? (
+            <div className="space-y-4">
+              <OrderSummaryBox
+                titleZh="現貨"
+                titleFr="En stock"
+                orderItems={instockItems}
+                products={products}
+                selected={selectedOrderType === 'instock'}
+                onSelect={() => setSelectedOrderType('instock')}
+                showSelector={true}
+                note="Retrait en main propre à Paris · 巴黎面交取貨"
+              />
+              <OrderSummaryBox
+                titleZh="預購"
+                titleFr="Précommande"
+                orderItems={preorderItems}
+                products={products}
+                selected={selectedOrderType === 'preorder'}
+                onSelect={() => setSelectedOrderType('preorder')}
+                showSelector={true}
+                note="Retrait en main propre à Paris · 巴黎面交取貨"
+              />
             </div>
-            <div className="border-t border-midnight/10 mt-4 pt-4 flex justify-between">
-              <p className="text-sm font-bold text-midnight">Total</p>
-              <p className="text-sm font-bold text-midnight tabular-nums">
-                {centsToEur(subtotal)} €
-              </p>
-            </div>
-            <p className="text-xs text-midnight/30 mt-3 leading-relaxed">
-              Retrait en main propre à Paris · 巴黎面交取貨
-            </p>
-          </div>
+          ) : (
+            <OrderSummaryBox
+              titleZh="訂單"
+              titleFr="Votre commande"
+              orderItems={items}
+              products={products}
+              selected={false}
+              onSelect={() => {}}
+              showSelector={false}
+              note="Retrait en main propre à Paris · 巴黎面交取貨"
+            />
+          )}
         </div>
       </div>
     </main>
