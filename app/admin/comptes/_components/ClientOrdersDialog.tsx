@@ -33,7 +33,7 @@ type Order = {
   discount_amount: number
   total_amount: number
   note: string | null
-  pickup_slots: { label: string } | null
+  pickup_slots: { label: string }[] | null
 }
 
 function centsToEur(cents: number) {
@@ -143,8 +143,7 @@ export function ClientOrdersDialog({
                       <div className="px-4 pb-4 border-t border-midnight/8">
                         {order.pickup_slots && (
                           <p className="text-xs text-midnight/40 mt-3 mb-2">
-                            📍 {/* @ts-expect-error — nested select */}
-                            {order.pickup_slots.label}
+                            📍 {order.pickup_slots[0]?.label}
                           </p>
                         )}
 
