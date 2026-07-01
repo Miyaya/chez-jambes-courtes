@@ -1,3 +1,4 @@
+import { unstable_noStore } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 function fmt(dateStr: string, locale: string) {
@@ -9,6 +10,7 @@ function fmt(dateStr: string, locale: string) {
 }
 
 export default async function PurchaseBanner() {
+  unstable_noStore()
   const supabase = createAdminClient()
 
   const { data: campaign } = await supabase
