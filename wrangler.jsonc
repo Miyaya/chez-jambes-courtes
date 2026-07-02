@@ -40,22 +40,24 @@
   },
   "env": {
     "staging": {
+      "name": "chezjambescourtes-staging",
+      "routes": [],
+      "workers_dev": true,
       "vars": {
-        "NEXT_PUBLIC_APP_URL": "https://staging-chez-jambes-courtes.miya850604.workers.dev",
+        "NEXT_PUBLIC_APP_URL": "https://chezjambescourtes-staging.miya850604.workers.dev",
         "NEXT_PUBLIC_SUPABASE_URL": "https://wmrcmztfbbdyigsopjcw.supabase.co",
         "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_Ia0e4XPxsMxK_6RSKFFqkQ_fgcK7zr0",
         "RESEND_FROM": "Chez Jambes Courtes Staging <hello@chezjambescourtes.com>"
       },
-      "routes": [],
-      "images": {
-        "binding": "IMAGES"
-      },
       "services": [
         {
           "binding": "WORKER_SELF_REFERENCE",
-          "service": "chez-jambes-courtes"
+          "service": "chezjambescourtes-staging",
         }
-      ]
+      ],
+      "images": {
+        "binding": "IMAGES"
+      },
     }
   }
 }
