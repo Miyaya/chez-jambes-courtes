@@ -3,9 +3,9 @@ import Link from 'next/link'
 export default function Footer({ className = '' }: { className?: string }) {
   return (
     <footer className={`bg-dark-green text-center px-8 py-10 text-sm text-white font-normal tracking-[0.08em] leading-loose ${className}`}>
-      <nav className="mt-3 flex flex-col items-start text-left gap-2 max-w-xl mx-auto">
-        <Link href="/comment-acheter" className="hover:underline transition-colors">
-          購買流程 · Comment acheter
+      <nav className="mt-3 flex flex-col items-start text-left gap-2 max-w-xl mx-auto lg:max-w-none lg:flex-row lg:flex-wrap lg:items-center lg:justify-center lg:text-center lg:gap-6">
+        <Link href="/comment-ca-marche" className="hover:underline transition-colors">
+          購物流程 · Comment ça marche
         </Link>
         <Link href="/faq" className="hover:underline transition-colors">
           常見問題 · FAQ

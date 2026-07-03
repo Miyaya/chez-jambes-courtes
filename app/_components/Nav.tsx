@@ -86,9 +86,9 @@ export default function Nav() {
             </button>
             {burgerOpen && (
               <div className={`absolute right-0 top-full mt-2 min-w-[10rem] rounded-xl border overflow-hidden ${dropdownBg}`}>
-                <Link href="/comment-acheter" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
-                  <p className="text-sm font-semibold tracking-[0.08em]">購買流程</p>
-                  <p className="text-sm font-semibold tracking-[0.08em]">Comment acheter</p>
+                <Link href="/comment-ca-marche" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-semibold tracking-[0.08em]">購物流程</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Comment ça marche</p>
                 </Link>
                 <Link href="/faq" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-semibold tracking-[0.08em]">FAQ</p>

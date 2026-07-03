@@ -303,7 +303,7 @@ export default function ShopClient({ products, hero }: { products: PublicProduct
             <p className="text-midnight font-bold leading-relaxed mb-1">{hero.zh}</p>
             <p className="text-midnight/65 text-sm leading-relaxed mb-3">{hero.fr}</p>
             <Link
-              href="/comment-acheter"
+              href="/comment-ca-marche"
               className="inline-block text-xs text-midnight/60 underline underline-offset-2 hover:text-midnight transition-colors"
             >
               閱讀購買規則 · Lire les conditions d&apos;achat →

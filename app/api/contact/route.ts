@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
   await getResend().emails.send({
     from: process.env.RESEND_FROM ?? 'Chez Jambes Courtes <onboarding@resend.dev>',
-    to: process.env.CONTACT || 'contact@chezjambescourtes.com',
+    to: process.env.CONTACT || 'chezjambescourtes@gmail.com',
     replyTo: email,
     subject: `訊息來自聯絡表單 · ${name || email}`,
     html: `<!DOCTYPE html>
