@@ -55,15 +55,8 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
-      <section
-        className="bg-yellow px-8 py-14 text-center"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-          backgroundSize: '28px 28px',
-        }}
-      >
-        <h1 className="text-3xl font-bold text-midnight mb-1">聯絡我們</h1>
-        <p className="text-midnight/60 text-sm tracking-[0.15em] uppercase">Nous contacter</p>
+      <section className="px-8 py-12 text-center">
+        <h1 className="text-3xl font-bold text-midnight mb-1">聯絡我們 · Nous contacter</h1>
       </section>
 
       <section className="max-w-2xl mx-auto px-6 py-16 space-y-8">
@@ -156,22 +149,6 @@ export default function ContactPage() {
               Chez Jambes Courtes
             </a>
           </div>
-        </div>
-
-        {/* Links */}
-        <div className="flex flex-wrap gap-4 text-sm">
-          <Link
-            href="/faq"
-            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
-          >
-            常見問題 FAQ →
-          </Link>
-          <Link
-            href="/"
-            className="px-5 py-2.5 border-2 border-midnight/20 text-midnight/60 font-bold rounded-full hover:border-midnight hover:text-midnight transition-colors duration-200"
-          >
-            返回首頁 →
-          </Link>
         </div>
       </section>
 

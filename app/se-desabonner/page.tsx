@@ -14,7 +14,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex flex-col min-h-screen bg-white">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-midnight">
-        <div className="w-full max-w-md bg-white border border-midnight/10 rounded-2xl shadow-xl overflow-hidden text-center">
+        <div className="w-full max-w-md bg-white border border-midnight/10 rounded-2xl overflow-hidden text-center">
           <div className="h-1.5 bg-yellow" />
           <div className="p-8">
             {children}

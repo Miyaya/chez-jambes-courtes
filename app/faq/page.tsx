@@ -6,20 +6,20 @@ import Footer from '../_components/Footer'
 
 const faqs: { zh: string; fr: string; answerZh: string; answerFr: string }[] = [
   {
+    zh: '有哪些付款方式？',
+    fr: 'Quels modes de paiement proposez-vous ?',
+    answerZh:
+      '我們提供三種安全可靠的付款方式，並依據您的購物模式（現貨 / 預購）彈性調整：\n💳 信用卡（Stripe 加密系統）：\n－ 購買「現貨」商品：下單時即時完成扣款。\n－ 參與「預購」活動：結帳時系統僅先取得信用卡授權（保留額度），此時並不會實際扣款。直到商家在批發市場為您成功採購到水果後，才會依實際出貨品項執行最終扣款。\n🏦 銀行轉帳：下單後系統會將轉帳帳戶資訊發送至您的信箱。請注意：款項必須在該波預購截止時間（明確標示於網頁與郵件中）前正式入帳，否則訂單將自動取消。\n🤝 面交時支付現金：為了防範惡意棄單，此選項僅開放給總金額「低於 30 歐元」且「過去曾在本網站成功完成至少一次交易」的老客戶使用。款項於面交當天交付即可。',
+    answerFr:
+      'Nous proposons trois modes de paiement sécurisés, adaptés à nos deux formules (En Stock / En Précommande) :\n💳 Carte bancaire (Stripe) :\n－ Pour les produits en Stock : débit immédiat à la commande.\n－ Pour les Précommandes : Stripe prend une simple pré-autorisation (bloque le montant) sans débiter votre compte. Le débit réel (total ou partiel) n\'intervient qu\'une fois vos fruits achetés au marché de gros.\n🏦 Virement bancaire : nos coordonnées vous sont envoyées par e-mail après la commande. Attention : pour être validé, le virement doit impérativement arriver sur notre compte avant l\'heure limite de clôture de la session de précommande (indiquée sur le site).\n🤝 Espèces au retrait : pour éviter les désistements, cette option est disponible uniquement pour les commandes de moins de 30 € ET réservée exclusivement aux clients ayant déjà récupéré au moins une première commande sur notre site. Le règlement se fait le jour de la remise.',
+  },
+  {
     zh: '線上刷卡安全嗎？',
     fr: 'Le paiement en ligne par carte est-il sécurisé ?',
     answerZh:
       '完全安全。我們使用 Stripe 處理所有刷卡付款，我們自己完全不會接觸或儲存您的卡號資訊。Stripe 是全球最受信賴的支付平台之一，被 Amazon、Google、Shopify 等大型企業廣泛採用，符合最高等級的 PCI DSS 安全標準。',
     answerFr:
       'Absolument. Nous utilisons Stripe pour traiter tous les paiements par carte — nous ne voyons ni ne stockons aucune donnée bancaire. Stripe est l\'une des plateformes de paiement les plus fiables au monde, utilisée par Amazon, Google, Shopify et de nombreuses autres grandes entreprises. Elle est certifiée PCI DSS niveau 1.',
-  },
-  {
-    zh: '有哪些付款方式？',
-    fr: 'Quels modes de paiement proposez-vous ?',
-    answerZh:
-      '目前提供三種付款方式：\n💳 信用卡（Stripe）：付款後訂單立即成立，Stripe 先保留款項，採購後才實際扣款。\n🏦 銀行轉帳：下訂後我們寄送匯款資訊，確認收款後才去採購，請盡快完成轉帳。\n🤝 面交付款：限有過完整訂單紀錄的熟客，付款於面交當天進行。',
-    answerFr:
-      'Nous proposons trois modes de paiement :\n💳 Carte bancaire (Stripe) : la commande est confirmée immédiatement, Stripe bloque le montant sans débiter avant l\'achat.\n🏦 Virement bancaire : nous vous envoyons les coordonnées après commande, l\'achat n\'a lieu qu\'après réception du virement.\n🤝 Paiement à la livraison : réservé aux clients ayant déjà finalisé une commande, règlement le jour de la remise.',
   },
   {
     zh: '訂閱電子報有什麼好處？',
@@ -30,20 +30,28 @@ const faqs: { zh: string; fr: string; answerZh: string; answerFr: string }[] = [
       'Vous recevez en avant-première les notifications de nouveaux arrivages, les alertes de mise en vente et des offres exclusives ponctuelles. Nos quantités étant limitées, les abonnés sont souvent les premiers informés — et les premiers servis.',
   },
   {
+    zh: '你們的水果貨源從哪裡來？',
+    fr: 'D\'où proviennent vos fruits ?',
+    answerZh:
+      '我們直接向 Rungis 市場採購，Rungis 是全世界最大的批發市場。目前所有台灣水果皆採空運冷鏈進口，確保抵達時仍保有新鮮度與最佳風味。',
+    answerFr:
+      'Nous nous approvisionnons directement au marché de Rungis, le plus grand marché de gros au monde. Nos fruits taïwanais sont actuellement tous importés par avion en chaîne du froid, afin de préserver leur fraîcheur et leur qualité à l\'arrivée.',
+  },
+  {
     zh: '我想買 Rungis 市場裡的其他水果，但網站上沒有列出來，也可以嗎？',
     fr: 'Je souhaite acheter des fruits du marché de Rungis qui ne sont pas sur le site, c\'est possible ?',
     answerZh:
-      '當然可以！請直接聯繫我們，告訴我們您想要的品項，我們會確認是否能夠代購及相關費用。',
+      '完全可以！但須請您提前與我們確認。如果您正在尋找某款 Rungis 市場內有販售、但我們網站上未列出的特定珍稀或當季水果，請務必在該波預購截止時間前至少 48 小時，透過網站聯絡表單與我們聯繫。\n若確認合作的批發商有現貨，我們將透過電子郵件與您確認最終報價。隨後，我們會在您的個人帳戶中開通專屬下單選項，讓您能將該商品加入購物車，並在我們前往市場採購前完成線上信用卡預先授權。恕不接受當天臨時追加或在市場採購現場的即時通訊要求。',
     answerFr:
-      'Bien sûr ! Contactez-nous directement en nous indiquant ce qui vous intéresse. Nous vous confirmerons la disponibilité et le tarif.',
+      'Oui, c\'est tout à fait possible, sous réserve de validation en amont ! Si vous recherchez un fruit exotique ou de saison spécifique disponible à Rungis, contactez-nous via notre formulaire au moins 48 heures avant la clôture de la session de précommande.\nSi le produit est disponible chez nos grossistes, nous convenons ensemble d\'un prix ferme par e-mail. Nous ajoutons ensuite une option personnalisée sur votre compte pour que vous puissiez l\'ajouter à votre panier et valider votre pré-autorisation avant notre départ au marché. Aucune demande de dernière minute ou modification en direct depuis le marché ne pourra être traitée.',
   },
   {
     zh: '可以開收據或發票嗎？',
     fr: 'Pouvez-vous fournir un reçu ou une facture ?',
     answerZh:
-      '可以。我們是持有正式 SIRET 號碼的合法公司，可以提供收據或發票。如有需要，請在下訂時於備注欄說明，或事後聯繫我們。',
+      '是的，完全可以。我們為法國合法註冊公司，在您的訂單經由商家最終確認成立後（包含您的扣款明細與付款方式），系統皆會自動開立官方正式發票。\n該發票將會同步發送至您的電子信箱，您也可以隨時登入網站的個人帳戶，在「歷史訂單」中進行下載與查看。',
     answerFr:
-      'Oui. Nous sommes une entreprise officielle disposant d\'un numéro SIRET, en mesure de fournir un reçu ou une facture. Précisez-le dans la note lors de votre commande, ou contactez-nous après coup.',
+      'Oui, absolument. En tant qu\'entreprise légalement enregistrée en France, une facture officielle est automatiquement éditée pour chaque commande dès sa validation définitive par nos soins (incluant le détail de votre transaction et le mode de paiement utilisé).\nElle vous est envoyée directement par e-mail et reste accessible à tout moment dans votre espace client, dans l\'historique de vos commandes.',
   },
 ]
 
@@ -65,7 +73,7 @@ function AccordionItem({
       >
         <div>
           <p className="font-bold text-midnight leading-snug">{item.zh}</p>
-          <p className="text-sm text-midnight/45 mt-0.5 leading-snug">{item.fr}</p>
+          <p className="font-bold text-midnight mt-0.5 leading-snug">{item.fr}</p>
         </div>
         <span
           className={`shrink-0 mt-0.5 text-midnight/40 text-lg leading-none transition-transform duration-200 ${open ? 'rotate-45' : ''}`}
@@ -82,9 +90,9 @@ function AccordionItem({
                 {line}
               </p>
             ))}
-            <div className="border-t border-midnight/8 pt-3 space-y-2">
+            <div className="border-t border-midnight/8 pt-3 space-y-3">
               {item.answerFr.split('\n').map((line, i) => (
-                <p key={i} className="text-sm text-midnight/55 leading-relaxed">
+                <p key={i} className="text-sm text-midnight leading-relaxed font-medium">
                   {line}
                 </p>
               ))}
@@ -97,29 +105,31 @@ function AccordionItem({
 }
 
 export default function FaqPage() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set())
+
+  function toggle(i: number) {
+    setOpenIndexes(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
 
   return (
     <main className="min-h-screen bg-white">
       {/* Hero */}
-      <section
-        className="bg-yellow px-8 py-14 text-center"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-          backgroundSize: '28px 28px',
-        }}
-      >
-        <h1 className="text-3xl font-bold text-midnight mb-1">常見問題</h1>
-        <p className="text-midnight/60 text-sm tracking-[0.15em] uppercase">Foire aux questions</p>
+      <section className="px-8 py-12 text-center">
+        <h1 className="text-3xl font-bold text-midnight mb-1">常見問題 · Foire aux questions</h1>
       </section>
 
-      <section className="max-w-2xl mx-auto px-6 py-16 space-y-3">
+      <section className="max-w-2xl lg:max-w-3xl mx-auto px-6 py-16 space-y-3">
         {faqs.map((item, i) => (
           <AccordionItem
             key={i}
             item={item}
-            open={openIndex === i}
-            onToggle={() => setOpenIndex(openIndex === i ? null : i)}
+            open={openIndexes.has(i)}
+            onToggle={() => toggle(i)}
           />
         ))}
 
@@ -136,21 +146,6 @@ export default function FaqPage() {
           >
             contact@chezjambescourtes.com
           </a>
-        </div>
-
-        <div className="pt-6 flex flex-wrap gap-4 text-sm">
-          <Link
-            href="/comment-acheter"
-            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
-          >
-            購買流程 →
-          </Link>
-          <Link
-            href="/"
-            className="px-5 py-2.5 border-2 border-midnight/20 text-midnight/60 font-bold rounded-full hover:border-midnight hover:text-midnight transition-colors duration-200"
-          >
-            返回首頁 →
-          </Link>
         </div>
       </section>
 

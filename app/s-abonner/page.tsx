@@ -17,6 +17,7 @@ export default function Page() {
                   src="/fruit-market.jpg"
                   alt="Marché de fruits colorés"
                   fill
+                  priority
                   className="object-cover"
                   sizes="(max-width: 768px) 0vw, 50vw"
                 />
@@ -68,23 +69,18 @@ export default function Page() {
             <div className="relative p-8">
               {/* 13.svg orange — right side of form */}
               <svg aria-hidden="true" viewBox="0 0 200 200" className="hidden md:block absolute -right-12 top-1/2 -translate-y-1/2 w-28 h-28 select-none z-10 transition-transform duration-250 hover:scale-120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M44 96.6198V186.454L156.787 190L145.801 52.1765L82.8163 10L44 96.6198Z" className="fill-orange" />
+                <path d="M44 96.6198V186.454L156.787 190L145.801 52.1765L82.8163 10L44 96.6198Z" className="fill-yellow" />
               </svg>
-              <h2 className="text-2xl text-midnight mb-3">Soyez les premiers informés</h2>
-              <p className="text-base text-midnight/75 leading-relaxed mb-1">
-                Mangues de Taïwan, litchis parfumés, pitayas rouges —
-                des fruits que l&apos;on ne trouve pas au supermarché, livrés en quantité limitée.
+              <h1 className="text-3xl font-bold text-midnight text-balance leading-tight mb-2">搶<span className="text-magenta">鮮</span>掌握第一手消息</h1>
+              <p className="text-xl text-midnight/60 text-balance leading-snug mb-4">Soyez les premiers informés</p>
+              <p className="text-base text-midnight leading-relaxed mb-1">
+                嚴選台灣在地完熟芒果、玉荷包荔枝、珍稀紅肉火龍果……我們不賣超市常見的大眾水果，只為您空運經嚴格挑選的極致美味。每批次數量有限，售完為止。
               </p>
-              <p className="text-sm text-midnight/50 leading-relaxed mb-5">
-                台灣芒果、荔枝、紅火龍果——超市買不到的頂級進口水果，限量供應。
+              <p className="text-base text-midnight/60 leading-relaxed mb-3">
+                Mangues de Taïwan cueillies à maturité, litchis parfumés, pitayas rouges intenses... Découvrez des fruits introuvables en grande surface, importés par avion et disponibles uniquement en quantité très limitée.
               </p>
 
               <SubscribeForm />
-
-              <p className="text-[0.72rem] text-midnight/35 mt-5 leading-relaxed">
-                Conformément au RGPD, vos données ne sont jamais partagées.<br />
-                符合 RGPD 數據規範，資料不與第三方共享。
-              </p>
             </div>
 
           </div>
@@ -94,10 +90,10 @@ export default function Page() {
           {/* Row 1: right */}
           <div className="flex whitespace-nowrap">
             <div className="flex shrink-0 animate-[marquee-right_55s_linear_infinite]">
-              <span className="shrink-0 text-yellow text-[0.68rem] uppercase tracking-[0.22em]">
+              <span className="shrink-0 text-midnight text-[0.68rem] uppercase tracking-[0.22em]">
                 {'CHEZ JAMBES COURTES  ·  '.repeat(12)}
               </span>
-              <span className="shrink-0 text-yellow text-[0.68rem] uppercase tracking-[0.22em]" aria-hidden="true">
+              <span className="shrink-0 text-midnight text-[0.68rem] uppercase tracking-[0.22em]" aria-hidden="true">
                 {'CHEZ JAMBES COURTES  ·  '.repeat(12)}
               </span>
             </div>
@@ -105,10 +101,10 @@ export default function Page() {
           {/* Row 2: left */}
           <div className="flex whitespace-nowrap">
             <div className="flex shrink-0 animate-[marquee-left_85s_linear_infinite]">
-              <span className="shrink-0 text-yellow text-[0.68rem] uppercase tracking-[0.22em]">
+              <span className="shrink-0 text-midnight text-[0.68rem] uppercase tracking-[0.22em]">
                 {'LES FRUITS EXOTIQUES FRAIS  ·  '.repeat(10)}
               </span>
-              <span className="shrink-0 text-yellow text-[0.68rem] uppercase tracking-[0.22em]" aria-hidden="true">
+              <span className="shrink-0 text-midnight text-[0.68rem] uppercase tracking-[0.22em]" aria-hidden="true">
                 {'LES FRUITS EXOTIQUES FRAIS  ·  '.repeat(10)}
               </span>
             </div>

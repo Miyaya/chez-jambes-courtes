@@ -50,3 +50,10 @@ next-env.d.ts
 
 !.env.example
 !.env.production
+
+# skills
+.github/skills/*
+.claude/skills/*
+.impeccable
+impeccable/*
+impeccable.json

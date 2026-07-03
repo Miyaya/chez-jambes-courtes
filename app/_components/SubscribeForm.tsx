@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { subscribeAction } from '@/app/actions'
 
@@ -16,15 +16,21 @@ export default function SubscribeForm() {
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
   const [emailError, setEmailError] = useState(false)
+  const [consentError, setConsentError] = useState(false)
   const [loading, setLoading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const consentRef = useRef<HTMLInputElement>(null)
 
   const isValid = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isValid(email)) { setEmailError(true); return }
-    if (!consent) return
+    if (!consent) {
+      setConsentError(true)
+      consentRef.current?.focus()
+      return
+    }
 
     setLoading(true)
     setServerError(null)
@@ -37,11 +43,11 @@ export default function SubscribeForm() {
     }
 
     if (result.error === 'already_subscribed') {
-      setServerError('Cette adresse est déjà inscrite · 此信箱已訂閱')
+      setServerError('此信箱已訂閱 · Cette adresse est déjà inscrite')
     } else if (result.error === 'email_failed') {
-      setServerError(`Inscription réussie mais l'e-mail a échoué · 訂閱成功但確認信發送失敗${result.detail ? ` (${result.detail})` : ''}`)
+      setServerError(`訂閱成功但確認信發送失敗 · Inscription réussie mais l'e-mail a échoué${result.detail ? ` (${result.detail})` : ''}`)
     } else {
-      setServerError(`Une erreur est survenue · 發生錯誤${result.detail ? ` (${result.detail})` : ''}`)
+      setServerError(`發生錯誤 · Une erreur est survenue${result.detail ? ` (${result.detail})` : ''}`)
     }
     setLoading(false)
   }
@@ -49,8 +55,9 @@ export default function SubscribeForm() {
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="mb-4 text-left">
-        <label className={labelClass}>Prénom · 姓名</label>
+        <label htmlFor="subscribe-name" className={labelClass}>名字 · Prénom</label>
         <input
+          id="subscribe-name"
           type="text"
           value={name}
           onChange={e => setName(e.target.value)}
@@ -61,10 +68,11 @@ export default function SubscribeForm() {
       </div>
 
       <div className="mb-4 text-left">
-        <label className={labelClass}>
-          Adresse e-mail · 電子信箱 <span className="text-magenta">*</span>
+        <label htmlFor="subscribe-email" className={labelClass}>
+          電子信箱 · Adresse e-mail <span className="text-magenta">*</span>
         </label>
         <input
+          id="subscribe-email"
           type="email"
           value={email}
           onChange={e => {
@@ -74,40 +82,55 @@ export default function SubscribeForm() {
           placeholder="vous@example.com"
           autoComplete="email"
           required
+          aria-invalid={emailError}
+          aria-describedby={emailError ? 'email-error' : undefined}
           className={inputClass}
         />
         {emailError && (
-          <p className="text-[0.72rem] text-magenta mt-1">
-            Veuillez entrer une adresse valide · 請輸入有效的電子信箱
+          <p id="email-error" role="alert" className="text-[0.72rem] text-magenta mt-1">
+            請輸入有效的電子信箱 · Veuillez entrer une adresse valide
           </p>
         )}
       </div>
 
       <div className="flex items-start gap-2.5 my-5 text-left">
         <input
+          ref={consentRef}
           type="checkbox"
           id="consent"
           checked={consent}
-          onChange={e => setConsent(e.target.checked)}
+          onChange={e => {
+            setConsent(e.target.checked)
+            if (e.target.checked) setConsentError(false)
+          }}
+          aria-invalid={consentError}
+          aria-describedby={consentError ? 'consent-error' : undefined}
           className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
         />
         <label htmlFor="consent" className="text-xs text-midnight/55 leading-relaxed cursor-pointer">
-          J&apos;accepte de recevoir des notifications de Chez Jambes Courtes.
-          Vous pouvez vous désabonner à tout moment.<br />
-          <span className="opacity-80">我同意接收到貨通知，可隨時退訂。</span>
+          符合 RGPD 數據隱私規範，您的個人資料絕不外洩。您隨時有權查閱、修改或要求刪除您的電子信箱，只需透過 contact@chezjambescourtes.com 送出申請即可。
+          <br />
+          Conformément au RGPD, vos données restent strictement confidentielles. Vous disposez d'un droit d'accès, de rectification et d'effacement de vos informations, exerçable à tout moment sur simple demande à contact@chezjambescourtes.com
         </label>
       </div>
+      {consentError && (
+        <p id="consent-error" role="alert" className="text-[0.72rem] text-magenta mb-3 -mt-3">
+          請先勾選同意後再送出 · Veuillez cocher la case avant de continuer
+        </p>
+      )}
 
       {serverError && (
-        <p className="text-[0.72rem] text-magenta mb-3">{serverError}</p>
+        <p role="alert" className="text-[0.72rem] text-magenta mb-3">{serverError}</p>
       )}
 
       <button
         type="submit"
-        disabled={loading || !consent}
+        disabled={loading}
+        aria-busy={loading}
+        aria-live="polite"
         className="w-full py-3 bg-midnight text-white text-[0.8rem] font-medium uppercase tracking-[0.15em] rounded-sm hover:bg-midnight/80 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
-        {loading ? '…' : 'Me prévenir · 通知我'}
+        {loading ? '處理中… · Envoi en cours…' : '即刻訂閱 · Me prévenir'}
       </button>
     </form>
   )

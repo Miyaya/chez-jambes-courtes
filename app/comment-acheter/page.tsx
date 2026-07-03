@@ -4,19 +4,11 @@ import Footer from '../_components/Footer'
 export default function CommentAcheterPage() {
   return (
     <main className="min-h-screen bg-white">
-      {/* Hero */}
-      <section
-        className="bg-yellow px-8 py-14 text-center"
-        style={{
-          backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-          backgroundSize: '28px 28px',
-        }}
-      >
-        <h1 className="text-3xl font-bold text-midnight mb-1">購買流程</h1>
-        <p className="text-midnight/60 text-sm tracking-[0.15em] uppercase">Comment acheter</p>
+      <section className="px-8 py-12 text-center">
+        <h1 className="text-3xl font-bold text-midnight mb-1">購買流程 · Comment acheter</h1>
       </section>
 
-      <section className="max-w-2xl mx-auto px-8 py-16">
+      <section className="max-w-2xl mx-auto px-8 py-12">
         <ol className="space-y-14">
 
           {/* ── Step 01 ── */}
@@ -133,22 +125,6 @@ export default function CommentAcheterPage() {
               <strong>Délai d&apos;annulation</strong> : nous publions à l&apos;avance la date de notre prochain achat. Vous pouvez annuler votre commande jusqu&apos;à la <strong>veille du jour d&apos;achat</strong>.
             </p>
           </div>
-        </div>
-
-        {/* Back links */}
-        <div className="mt-12 flex flex-wrap gap-4 text-sm">
-          <Link
-            href="/instock"
-            className="px-5 py-2.5 bg-midnight text-yellow font-bold rounded-full hover:bg-yellow hover:text-midnight transition-colors duration-200"
-          >
-            現貨商品 →
-          </Link>
-          <Link
-            href="/preorder"
-            className="px-5 py-2.5 border-2 border-midnight/20 text-midnight/60 font-bold rounded-full hover:border-midnight hover:text-midnight transition-colors duration-200"
-          >
-            預購商品 →
-          </Link>
         </div>
       </section>
 
