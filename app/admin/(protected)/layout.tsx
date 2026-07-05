@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { requireAdmin } from '@/lib/admin'
+import { logoutAction } from './actions'
 
 export const metadata = { title: 'Admin — Chez Jambes Courtes' }
 
@@ -21,6 +22,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         >
           ← Site
         </Link>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Déconnexion
+          </button>
+        </form>
       </nav>
       <div className="max-w-6xl mx-auto px-6 py-8">{children}</div>
     </div>
