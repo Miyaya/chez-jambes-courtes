@@ -59,7 +59,7 @@ export function NouveauProduitDialog() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Stock (0 = précommande)" name="stock_quantity" type="number" placeholder="0" min="0" defaultValue="0" />
+                  <Field label="Stock (0 = Flash)" name="stock_quantity" type="number" placeholder="0" min="0" defaultValue="0" />
                   <Field label="Fournisseur" name="supplier" placeholder="Optionnel" />
                 </div>
 
@@ -82,7 +82,7 @@ export function NouveauProduitDialog() {
                     Afficher à la vente
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="available" defaultChecked className="sr-only peer" />
+                    <input type="checkbox" name="visible_instock" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 rounded-full bg-midnight/20 peer-checked:bg-midnight transition-colors duration-200" />
                     <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-5" />
                   </label>

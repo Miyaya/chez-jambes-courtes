@@ -15,7 +15,9 @@ export type PublicProduct = {
   unit_label: string
   description: string | null
   image_url: string | null
-  available: boolean
+  visible_instock: boolean
+  has_price_range: boolean
+  preference_options: string[]
   stock_quantity?: number | null  // only present for instock products
   created_at: string
 }
@@ -81,15 +83,9 @@ function flyToCartIcon(sourceEl: HTMLElement) {
   requestAnimationFrame(frame)
 }
 
-// ── Detail content shared by mobile modal and desktop panel ──
+// ── Product card ──
 
-function DetailContent({
-  product,
-  onClose,
-}: {
-  product: PublicProduct
-  onClose: () => void
-}) {
+function ProductCard({ product }: { product: PublicProduct }) {
   const [qty, setQty] = useState(1)
   const { addToCart, cart } = useCart()
   const addBtnRef = useRef<HTMLButtonElement>(null)
@@ -102,129 +98,25 @@ function DetailContent({
     addToCart(product.id, qty, product)
     if (addBtnRef.current) flyToCartIcon(addBtnRef.current)
     setQty(1)
-    onClose()
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Image */}
-      <div className="relative h-52 shrink-0">
+    <div className="flex flex-col sm:flex-row bg-white border border-midnight/10 rounded-2xl overflow-hidden">
+      {/* Image — full-width on top on small screens, 60% of the card on the left from sm+ */}
+      <div className="relative h-56 w-full sm:h-auto sm:w-3/5 shrink-0">
         {product.image_url ? (
           <Image
             src={product.image_url}
-            alt={product.name_fr}
+            alt={`${product.name_tw} · ${product.name_fr}`}
             fill
             className="object-cover"
-            sizes="400px"
-          />
-        ) : (
-          <Placeholder name={product.name_tw} />
-        )}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 bg-midnight/70 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-midnight transition-colors text-sm"
-        >
-          ✕
-        </button>
-      </div>
-
-      {/* Info */}
-      <div className="flex flex-col flex-1 overflow-y-auto p-6">
-        <p className="text-xs text-midnight/45 mb-0.5">{product.name_fr}</p>
-        <h2 className="text-xl font-bold text-midnight mb-1">{product.name_tw}</h2>
-        <p className="text-xs text-midnight/35 uppercase tracking-widest mb-5">{product.origin}</p>
-
-        {product.description && (
-          <p className="text-sm text-midnight/65 leading-relaxed mb-6">{product.description}</p>
-        )}
-
-        <p className="text-xl font-bold text-midnight mt-auto">
-          {centsToEur(product.unit_price)} €
-          <span className="text-sm font-normal text-midnight/45 ml-1">/ {product.unit_label}</span>
-        </p>
-
-        {/* Qty toggle */}
-        <div className="flex items-center gap-2 mt-4">
-          <button
-            onClick={() => setQty(q => Math.max(1, q - 1))}
-            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors"
-          >
-            −
-          </button>
-          <span className="w-6 text-center font-bold text-midnight tabular-nums">{qty}</span>
-          <button
-            onClick={() => setQty(q => Math.min(maxAdditional, q + 1))}
-            disabled={qty >= maxAdditional}
-            className="w-8 h-8 rounded-full border-2 border-midnight/20 flex items-center justify-center text-midnight font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            +
-          </button>
-          {inCart > 0 && (
-            <span className="ml-auto text-xs text-midnight/40 tabular-nums">{inCart} au panier</span>
-          )}
-        </div>
-
-        {/* Add button */}
-        <button
-          ref={addBtnRef}
-          onClick={handleAdd}
-          disabled={maxAdditional <= 0}
-          className="mt-3 w-full bg-midnight text-yellow font-bold text-xs uppercase tracking-wider py-3 rounded-xl hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {maxAdditional <= 0 ? 'Stock épuisé · 已售完' : 'Ajouter au panier'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ── Product card (horizontal) ──
-
-function ProductCard({
-  product,
-  onSelect,
-}: {
-  product: PublicProduct
-  onSelect: () => void
-}) {
-  const [qty, setQty] = useState(1)
-  const { addToCart, cart } = useCart()
-  const addBtnRef = useRef<HTMLButtonElement>(null)
-  const inCart = cart[product.id] ?? 0
-  const maxAdditional = product.stock_quantity != null
-    ? Math.max(0, product.stock_quantity - inCart)
-    : Infinity
-
-  const handleAdd = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    addToCart(product.id, qty, product)
-    if (addBtnRef.current) flyToCartIcon(addBtnRef.current)
-    setQty(1)
-  }
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className="flex flex-col sm:flex-row bg-white border border-midnight/10 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer"
-      onClick={onSelect}
-      onKeyDown={e => e.key === 'Enter' && onSelect()}
-    >
-      {/* Image — full-width on mobile (col), fixed-width on sm+ (row) */}
-      <div className="relative h-44 w-full sm:h-auto sm:w-44 shrink-0">
-        {product.image_url ? (
-          <Image
-            src={product.image_url}
-            alt={product.name_fr}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 176px"
+            sizes="(max-width: 640px) 60vw, (max-width: 1024px) 60vw, 460px"
           />
         ) : (
           <Placeholder name={product.name_tw} />
         )}
         {product.stock_quantity != null && (
-          <span className={`absolute bottom-2 left-2 text-[0.6rem] font-bold px-1.5 py-0.5 rounded-full ${
+          <span className={`absolute bottom-2 left-2 lg:bottom-3 lg:left-3 text-[0.6rem] lg:text-xs font-bold px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full ${
             product.stock_quantity <= 3
               ? 'bg-magenta text-white'
               : 'bg-midnight/60 text-white'
@@ -235,37 +127,41 @@ function ProductCard({
       </div>
 
       {/* Info */}
-      <div className="flex flex-col flex-1 p-4 min-w-0">
-        <p className="text-[0.62rem] text-midnight/45 leading-tight truncate">{product.name_fr}</p>
-        <p className="text-base font-bold text-midnight leading-tight mt-0.5">{product.name_tw}</p>
-        <p className="text-[0.6rem] text-midnight/35 uppercase tracking-widest mt-0.5">{product.origin}</p>
+      <div className="flex flex-col flex-1 p-4 lg:p-6 min-w-0">
+        <p className="text-xl font-semibold text-midnight leading-tight">{product.name_tw}</p>
+        <p className="text-base font-semibold text-midnight/75 leading-tight mt-0.5">{product.name_fr}</p>
+        <p className="text-xs lg:text-sm text-midnight/55 uppercase tracking-widest mt-1.5">產地: {product.origin}</p>
 
-        <p className="text-base font-bold text-midnight mt-auto pt-3">
+        {product.description && (
+          <p className="text-sm text-midnight/55 leading-relaxed mt-2 whitespace-pre-line">{product.description}</p>
+        )}
+
+        <p className="text-base lg:text-xl font-bold text-midnight mt-auto pt-3">
+          {product.has_price_range && (
+            <span className="text-[0.62rem] lg:text-sm font-normal text-midnight/45 mr-1">至多</span>
+          )}
           {centsToEur(product.unit_price)} €
-          <span className="text-[0.62rem] font-normal text-midnight/45 ml-1">/ {product.unit_label}</span>
+          <span className="text-[0.62rem] lg:text-sm font-normal text-midnight/45 ml-1">/ {product.unit_label}</span>
         </p>
 
         {/* Qty toggle — own row */}
-        <div
-          className="flex items-center gap-3 sm:gap-1.5 mt-3 sm:mt-2"
-          onClick={e => e.stopPropagation()}
-        >
+        <div className="flex items-center gap-3 mt-3">
           <button
             onClick={() => setQty(q => Math.max(1, q - 1))}
-            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors [touch-action:manipulation]"
+            className="w-11 h-11 lg:w-14 lg:h-14 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base lg:text-lg font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors [touch-action:manipulation]"
           >
             −
           </button>
-          <span className="w-6 sm:w-5 text-center text-base sm:text-sm font-bold text-midnight tabular-nums">{qty}</span>
+          <span className="w-6 lg:w-8 text-center text-base lg:text-lg font-bold text-midnight tabular-nums">{qty}</span>
           <button
             onClick={() => setQty(q => Math.min(maxAdditional, q + 1))}
             disabled={qty >= maxAdditional}
-            className="w-11 h-11 sm:w-6 sm:h-6 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base sm:text-xs font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed [touch-action:manipulation]"
+            className="w-11 h-11 lg:w-14 lg:h-14 rounded-full border border-midnight/20 flex items-center justify-center text-midnight text-base lg:text-lg font-bold hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors disabled:opacity-30 disabled:cursor-not-allowed [touch-action:manipulation]"
           >
             +
           </button>
           {inCart > 0 && (
-            <span className="ml-auto text-[0.6rem] text-midnight/40 tabular-nums">{inCart} ✓</span>
+            <span className="ml-auto text-[0.6rem] lg:text-xs text-midnight/40 tabular-nums">{inCart} ✓</span>
           )}
         </div>
 
@@ -274,9 +170,9 @@ function ProductCard({
           ref={addBtnRef}
           onClick={handleAdd}
           disabled={maxAdditional <= 0}
-          className="mt-3 sm:mt-2 w-full bg-midnight text-yellow text-sm sm:text-[0.65rem] font-bold uppercase tracking-wide py-3 sm:py-1.5 rounded-lg hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed [touch-action:manipulation]"
+          className="mt-3 w-full bg-midnight text-yellow text-sm lg:text-base font-bold uppercase tracking-wide py-3 lg:py-4 rounded-lg hover:bg-yellow hover:text-midnight transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed [touch-action:manipulation]"
         >
-          {maxAdditional <= 0 ? '已售完' : 'Ajouter'}
+          {maxAdditional <= 0 ? '已售完 · Épuisé' : '加入購物車 · Ajouter'}
         </button>
       </div>
     </div>
@@ -286,80 +182,40 @@ function ProductCard({
 // ── Main page component ──
 
 export default function ShopClient({ products, hero }: { products: PublicProduct[]; hero?: Hero }) {
-  const [selected, setSelected] = useState<PublicProduct | null>(null)
-
   return (
     <main className="min-h-screen bg-white flex flex-col">
-      {/* Hero */}
+      {/* Alert */}
       {hero && (
-        <section
-          className="bg-yellow px-8 py-20"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #FFCD8B 2.5px, transparent 2.5px)',
-            backgroundSize: '28px 28px',
-          }}
-        >
-          <div className="max-w-3xl mx-auto">
-            <p className="text-midnight font-bold leading-relaxed mb-1">{hero.zh}</p>
-            <p className="text-midnight/65 text-sm leading-relaxed mb-3">{hero.fr}</p>
+        <section className="px-4 sm:px-6 pt-8">
+          <div className="max-w-3xl mx-auto rounded-2xl border border-midnight/10 bg-yellow px-6 py-5">
+            <p className="text-midnight font-semibold leading-relaxed mb-1">{hero.zh}</p>
+            <p className="text-midnight font-semibold text-sm leading-relaxed mb-4">{hero.fr}</p>
             <Link
               href="/comment-ca-marche"
-              className="inline-block text-xs text-midnight/60 underline underline-offset-2 hover:text-midnight transition-colors"
+              className="inline-block text-xs font-semibold uppercase tracking-wider text-midnight/60 border-2 border-midnight/20 rounded-full px-4 py-2 hover:bg-midnight hover:text-yellow hover:border-midnight transition-colors"
             >
-              閱讀購買規則 · Lire les conditions d&apos;achat →
+              閱讀購買規則 · Comment ça marche
             </Link>
           </div>
         </section>
       )}
 
       {/* Product grid */}
-      <section className="px-2 sm:px-6 py-12 max-w-3xl mx-auto w-full">
-        {products.length === 0 ? (
-          <p className="text-midnight/30 text-center text-sm tracking-widest uppercase py-24">
-            Aucun produit disponible · 目前無商品
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {products.map(p => (
-              <ProductCard key={p.id} product={p} onSelect={() => setSelected(p)} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Desktop: transparent click-away overlay */}
-      {selected && (
-        <div
-          className="hidden lg:block fixed inset-0 z-30"
-          onClick={() => setSelected(null)}
-        />
-      )}
-
-      {/* Desktop: slide-in panel from right, starts below nav (~58px) */}
-      <div
-        className={`hidden lg:flex fixed right-0 top-[58px] h-[calc(100vh-58px)] w-[400px] bg-white border-l border-midnight/10 shadow-2xl z-40 flex-col overflow-hidden transition-transform duration-300 ease-in-out ${
-          selected ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {selected && (
-          <DetailContent product={selected} onClose={() => setSelected(null)} />
-        )}
-      </div>
-
-      {/* Mobile: modal overlay */}
-      {selected && (
-        <div
-          className="lg:hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-midnight/70 backdrop-blur-sm"
-          onClick={() => setSelected(null)}
-        >
-          <div
-            className="bg-white rounded-2xl overflow-hidden max-w-md w-full shadow-2xl max-h-[90vh] flex flex-col"
-            onClick={e => e.stopPropagation()}
-          >
-            <DetailContent product={selected} onClose={() => setSelected(null)} />
-          </div>
+      <section className="px-4 sm:px-6 py-12">
+        <div className="max-w-3xl mx-auto">
+          {products.length === 0 ? (
+            <p className="text-midnight/30 text-center text-sm tracking-widest uppercase py-24">
+              目前無商品 · Aucun produit disponible
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {products.map(p => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </section>
 
       <Footer className="mt-auto" />
     </main>

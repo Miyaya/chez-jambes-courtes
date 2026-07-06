@@ -8,6 +8,7 @@ export type CartProduct = {
   unit_price: number
   unit_label: string
   stock_quantity?: number | null
+  preference_options?: string[]
 }
 
 type CartContextType = {

@@ -11,6 +11,7 @@ type OrderItem = {
   unit_label: string
   qty: number
   line_total: number
+  preference?: string | null
 }
 
 type OrderEmailData = {
@@ -42,7 +43,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailData) {
           <strong>${item.name_tw}</strong>
           <span style="color:rgba(3,25,38,0.5);margin-left:6px;">${item.name_fr}</span>
           <br />
-          <span style="font-size:12px;color:rgba(3,25,38,0.45);">${item.qty} × ${item.unit_label}</span>
+          <span style="font-size:12px;color:rgba(3,25,38,0.45);">${item.qty} × ${item.unit_label}${item.preference ? ` · ${item.preference}` : ''}</span>
         </td>
         <td style="padding:8px 0;border-bottom:1px dashed rgba(3,25,38,0.1);font-size:14px;color:#1A1512;text-align:right;white-space:nowrap;">
           ${centsToEur(item.line_total)} €

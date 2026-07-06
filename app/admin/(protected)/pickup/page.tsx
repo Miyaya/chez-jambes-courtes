@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { NouveauCreneauDialog } from './_components/NouveauCreneauDialog'
 
 export const metadata = { title: 'Pickup — Admin' }
 
@@ -38,9 +39,12 @@ export default async function PickupAdminPage() {
 
   return (
     <div>
-      <h1 className="text-lg font-bold text-midnight mb-6">
-        Pickup · 取貨時段
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-lg font-bold text-midnight">
+          Pickup · 取貨時段
+        </h1>
+        <NouveauCreneauDialog />
+      </div>
 
       {!slots?.length && (
         <p className="text-sm text-midnight/35">Aucun créneau.</p>
@@ -58,7 +62,7 @@ export default async function PickupAdminPage() {
             customer_email: string
             customer_phone: string | null
             note: string | null
-            items: { name_tw: string; qty: number; unit_label: string }[]
+            items: { name_tw: string; qty: number; unit_label: string; preference?: string | null }[]
             payment_method: string | null
           }[]
 
@@ -114,7 +118,7 @@ export default async function PickupAdminPage() {
                     {orders.map(order => {
                       const status = order.status as OrderStatus
                       const label = STATUS_LABEL[status] ?? STATUS_LABEL.received
-                      const items: { name_tw: string; qty: number; unit_label: string }[] =
+                      const items: { name_tw: string; qty: number; unit_label: string; preference?: string | null }[] =
                         Array.isArray(order.items) ? order.items : []
 
                       return (
@@ -142,6 +146,9 @@ export default async function PickupAdminPage() {
                                 <li key={i} className="text-xs text-midnight">
                                   <span className="font-bold">{item.name_tw}</span>
                                   <span className="text-midnight/40 ml-1">× {item.qty} {item.unit_label}</span>
+                                  {item.preference && (
+                                    <span className="ml-1 font-bold text-midnight bg-yellow/40 rounded px-1">{item.preference}</span>
+                                  )}
                                 </li>
                               ))}
                             </ul>

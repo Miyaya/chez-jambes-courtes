@@ -78,16 +78,9 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         <h1 className="text-2xl font-bold text-midnight mb-1 text-center tracking-tight">
           Merci · 感謝您的訂購 !
         </h1>
-        {order?.customer_prenom && (
-          <p className="text-sm text-midnight/50 text-center mb-6">
-            {order.customer_prenom} {order.customer_nom}
-          </p>
-        )}
-        {order?.order_number && (
-          <p className="text-xs text-center text-midnight/35 uppercase tracking-widest mb-6">
-            {order.order_number}
-          </p>
-        )}
+        <p className="text-sm text-center text-midnight/60 uppercase tracking-widest mb-6">
+          訂單編號 #{order?.order_number}
+        </p>
 
         {items.length > 0 && (
           <div className="border-t border-b border-midnight/10 py-4 mb-5 space-y-2">
@@ -263,15 +256,9 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         Merci · 感謝您的訂購 !
       </h1>
 
-      {order?.customer_prenom && (
-        <p className="text-sm text-midnight/50 text-center mb-6">{order.customer_prenom} {order.customer_nom}</p>
-      )}
-
-      {order?.order_number && (
-        <p className="text-xs text-center text-midnight/35 uppercase tracking-widest mb-6">
-          {order.order_number}
-        </p>
-      )}
+      <p className="text-sm text-center text-midnight/60 uppercase tracking-widest mb-6">
+        訂單編號 #{order?.order_number}
+      </p>
 
       {/* Items */}
       {items.length > 0 && (

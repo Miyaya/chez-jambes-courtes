@@ -8,6 +8,8 @@ function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
+const MIN_ORDER_CENTS = 1600
+
 export default function CartPanel() {
   const { cart, products, removeFromCart, updateQty, isCartOpen, closeCart } = useCart()
 
@@ -33,6 +35,7 @@ export default function CartPanel() {
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
+  const belowMinimum = subtotal < MIN_ORDER_CENTS
 
   const instockItems = items.filter(([id]) => products[id]?.stock_quantity != null)
   const preorderItems = items.filter(([id]) => products[id]?.stock_quantity == null)
@@ -45,9 +48,8 @@ export default function CartPanel() {
     return (
       <div key={id} className="flex items-center gap-3 py-4 border-b border-midnight/10">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-midnight/40 truncate">{p.name_fr}</p>
-          <p className="font-bold text-midnight text-sm leading-tight mt-0.5">{p.name_tw}</p>
-          <p className="text-xs text-midnight/35 mt-0.5">{centsToEur(p.unit_price)} € / {p.unit_label}</p>
+          <p className="font-bold text-midnight text-sm leading-tight mt-0.5">{p.name_tw} {p.name_fr}</p>
+          <p className="text-sm text-midnight/55 mt-0.5">{centsToEur(p.unit_price)} € / {p.unit_label}</p>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -110,43 +112,16 @@ export default function CartPanel() {
           </button>
         </div>
 
-        {/* Warning banner */}
-        {hasBoth && (
-          <div className="px-5 py-3 bg-red-50 border-b border-red-100 shrink-0">
-            <p className="text-xs text-red-600 leading-relaxed font-medium">
-              ⚠️ 現貨與預購需分開結帳，請分兩次下單。
-            </p>
-            <p className="text-[0.65rem] text-red-500 mt-0.5">
-              Les articles en stock et en précommande doivent être commandés séparément.
-            </p>
-          </div>
-        )}
-
         {/* Items */}
         <div className="flex-1 overflow-y-auto px-6 py-2">
           {items.length === 0 ? (
             <p className="text-midnight/30 text-sm tracking-widest uppercase text-center py-20">
               Panier vide · 購物車是空的
             </p>
-          ) : hasBoth ? (
-            <>
-              <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold pt-4 pb-1">
-                現貨 · En stock
-              </p>
-              {instockItems.map(([id, qty]) => renderCartItem(id, qty))}
-              <div className="flex items-center gap-3 my-3">
-                <div className="flex-1 h-px bg-midnight/10" />
-                <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold">
-                  預購 · Précommande
-                </p>
-                <div className="flex-1 h-px bg-midnight/10" />
-              </div>
-              {preorderItems.map(([id, qty]) => renderCartItem(id, qty))}
-            </>
           ) : (
             <>
-              <p className="text-[0.6rem] uppercase tracking-[0.14em] text-midnight/40 font-bold pt-4 pb-1">
-                {instockItems.length > 0 ? '現貨 · En stock' : '預購 · Précommande'}
+              <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 font-bold pt-4 pb-1">
+                {instockItems.length > 0 ? '現貨 · En stock' : '快閃 · Flash'}
               </p>
               {items.map(([id, qty]) => renderCartItem(id, qty))}
             </>
@@ -160,13 +135,34 @@ export default function CartPanel() {
               <p className="text-sm text-midnight/50">Sous-total</p>
               <p className="font-bold text-midnight tabular-nums">{centsToEur(subtotal)} €</p>
             </div>
-            <Link
-              href="/checkout"
-              onClick={closeCart}
-              className="block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight transition-colors duration-200 text-center"
-            >
-              Confirmer · 前往結帳 →
-            </Link>
+            <div className="relative group">
+              {belowMinimum ? (
+                <button
+                  type="button"
+                  disabled
+                  className="block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl text-center opacity-50 cursor-not-allowed"
+                >
+                  Confirmer · 前往結帳 →
+                </button>
+              ) : (
+                <Link
+                  href="/checkout"
+                  onClick={closeCart}
+                  className="block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight transition-colors duration-200 text-center"
+                >
+                  Confirmer · 前往結帳 →
+                </Link>
+              )}
+
+              {belowMinimum && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
+                  必須訂至少兩顆水果
+                  <br />
+                  <span className="text-white/60 text-[10px]">Il faut commander au moins 2 fruits</span>
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-midnight" />
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

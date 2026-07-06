@@ -19,9 +19,9 @@ export default function CommentCaMarchePage() {
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
             <div className="pt-1.5 pb-6 w-full">
-              <h2 className="text-lg font-bold text-midnight mb-3">加入預購 · La Précommande</h2>
+              <h2 className="text-lg font-bold text-midnight mb-3">加入快閃 · La Vente Flash</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                每週固定開放限時預購！在截止時間前，輕鬆在網站上挑選您喜愛的頂級鮮果並送出訂單。系統會立即發送訂單成立確認信至您的信箱。（此時 Stripe 僅會取得信用卡預先授權額度，尚未真正扣款喔！）
+                每週固定開放限時快閃！在截止時間前，輕鬆在網站上挑選您喜愛的頂級鮮果並送出訂單。系統會立即發送訂單成立確認信至您的信箱。（此時 Stripe 僅會取得信用卡預先授權額度，尚未真正扣款喔！）
               </p>
               <p className="text-sm text-midnight/55 leading-relaxed">
                 Chaque semaine, on vous ouvre nos carnets de commandes ! Repérez la date limite, faites votre marché tranquillement sur le site et validez. Un e-mail de confirmation file direct dans votre boîte. (Note : une simple empreinte bancaire est prise sur Stripe, aucun vrai débit à ce stade !)
@@ -40,7 +40,7 @@ export default function CommentCaMarchePage() {
             <div className="pt-1.5 pb-6 w-full">
               <h2 className="text-lg font-bold text-midnight mb-3">出發採購 · Le Coup de Feu à Rungis</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                預購截止後，我們會於深夜親自前往 Rungis 國際市場。我們的任務？在合作批發商中，為您一箱箱親自嚴選、把關，只帶回品質最完美的頂級水果。
+                快閃截止後，我們會於深夜親自前往 Rungis 國際市場。我們的任務？在合作批發商中，為您一箱箱親自嚴選、把關，只帶回品質最完美的頂級水果。
               </p>
               <p className="text-sm text-midnight/55 leading-relaxed">
                 Dès la clôture des commandes, on enfile nos vestes et on file au Marché de Rungis au milieu de la nuit. Notre mission ? Dénicher et inspecter vos fruits un par un chez nos grossistes partenaires pour ne vous ramener que la crème de la crème.
@@ -108,20 +108,20 @@ export default function CommentCaMarchePage() {
 
         {/* Bonus: overflow "En Stock" deals */}
         <div className="mt-10 rounded-2xl bg-midnight/5 border border-midnight/10 px-6 py-5 space-y-4">
-          <p className="text-xs text-midnight/50 uppercase tracking-widest font-bold">💡 快閃現貨專區 · Le Coin des Opportunités</p>
+          <p className="text-xs text-midnight/50 uppercase tracking-widest font-bold">💡 現貨優惠專區 · Le Coin des Bonnes Affaires</p>
 
           <div>
             <p className="text-sm text-midnight leading-relaxed mb-1.5">
-              我們的商業模式 100% 建立在「限時預購」上，以確保極致新鮮。然而，Rungis 的批發商只按「整箱」販售！舉例來說：當客戶總共預購了 37 顆芒果，我們就必須買下 4 整箱（共 48 顆）—— 這意味著會有 11 顆頂級芒果變成多餘的庫存。
+              我們的商業模式 100% 建立在「限時快閃」上，以確保極致新鮮。然而，Rungis 的批發商只按「整箱」販售！舉例來說：當客戶總共下單了 37 顆芒果，我們就必須買下 4 整箱（共 48 顆）—— 這意味著會有 11 顆頂級芒果變成多餘的庫存。
             </p>
             <p className="text-sm text-midnight/55 leading-relaxed">
-              Notre modèle repose à 100 % sur la précommande pour vous garantir un circuit ultra-frais. Cependant, les grossistes à Rungis vendent uniquement par colis complets ! Si vous nous commandez 37 mangues, nous devons acheter 4 caisses de 12... et il nous reste 11 mangues d&apos;exception sur les bras.
+              Notre modèle repose à 100 % sur le Flash pour vous garantir un circuit ultra-frais. Cependant, les grossistes à Rungis vendent uniquement par colis complets ! Si vous nous commandez 37 mangues, nous devons acheter 4 caisses de 12... et il nous reste 11 mangues d&apos;exception sur les bras.
             </p>
           </div>
 
           <div className="border-t border-midnight/10 pt-4">
             <p className="text-sm text-midnight leading-relaxed mb-1.5">
-              <strong>限時好康</strong>：為了惜食不浪費，這些多出來的鮮果會立即以「快閃現貨」形式上架網站，並附帶限時小折扣！
+              <strong>限時好康</strong>：為了惜食不浪費，這些多出來的鮮果會立即以「現貨優惠」形式上架網站，並附帶限時小折扣！
             </p>
             <p className="text-sm text-midnight/55 leading-relaxed">
               <strong>La bonne affaire</strong> : ces fruits restants sont immédiatement basculés « En Stock » sur le site avec une petite remise sympa pour éviter tout gaspillage.

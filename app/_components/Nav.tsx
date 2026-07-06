@@ -29,9 +29,7 @@ function BurgerIcon() {
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
-  const [shopOpen, setShopOpen] = useState(false)
   const [burgerOpen, setBurgerOpen] = useState(false)
-  const shopRef = useRef<HTMLDivElement>(null)
   const burgerRef = useRef<HTMLDivElement>(null)
   const { cartTotal, openCart } = useCart()
 
@@ -54,7 +52,6 @@ export default function Nav() {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (shopRef.current && !shopRef.current.contains(e.target as Node)) setShopOpen(false)
       if (burgerRef.current && !burgerRef.current.contains(e.target as Node)) setBurgerOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -75,10 +72,37 @@ export default function Nav() {
         </Link>
 
         <div className="flex items-center gap-3 justify-end md:justify-start w-full md:w-auto">
+          {/* Flash */}
+          <Link
+            href="/flash"
+            className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 ${
+              scrolled
+                ? 'border-white text-white hover:bg-white hover:text-dark-green'
+                : 'border-midnight text-midnight hover:bg-midnight hover:text-green'
+            }`}
+          >
+            Flash
+          </Link>
+
+          {/* Cart */}
+          <button
+            data-cart-icon
+            onClick={openCart}
+            className={`relative transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
+            aria-label={`Panier — ${cartTotal} article${cartTotal !== 1 ? 's' : ''}`}
+          >
+            <CartIcon />
+            {cartTotal > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-magenta text-white text-[0.6rem] font-bold min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full flex items-center justify-center leading-none">
+                {cartTotal > 99 ? '99+' : cartTotal}
+              </span>
+            )}
+          </button>
+
           {/* Burger */}
           <div ref={burgerRef} className="relative flex items-center">
             <button
-              onClick={() => { setBurgerOpen(o => !o); setShopOpen(false) }}
+              onClick={() => setBurgerOpen(o => !o)}
               className={`p-3 -m-3 transition-colors duration-300 ${scrolled ? 'text-white' : 'text-midnight'}`}
               aria-label="選單"
             >
@@ -93,6 +117,10 @@ export default function Nav() {
                 <Link href="/faq" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-semibold tracking-[0.08em]">FAQ</p>
                   <p className="text-sm font-semibold tracking-[0.08em]">Questions fréquentes</p>
+                </Link>
+                <Link href="/abonnement" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-semibold tracking-[0.08em]">訂閱電子報</p>
+                  <p className="text-sm font-semibold tracking-[0.08em]">Abonnement</p>
                 </Link>
                 <Link href="/contact" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-semibold tracking-[0.08em]">聯絡我們</p>

@@ -9,9 +9,9 @@ const faqs: { zh: string; fr: string; answerZh: string; answerFr: string }[] = [
     zh: '有哪些付款方式？',
     fr: 'Quels modes de paiement proposez-vous ?',
     answerZh:
-      '我們提供三種安全可靠的付款方式，並依據您的購物模式（現貨 / 預購）彈性調整：\n💳 信用卡（Stripe 加密系統）：\n－ 購買「現貨」商品：下單時即時完成扣款。\n－ 參與「預購」活動：結帳時系統僅先取得信用卡授權（保留額度），此時並不會實際扣款。直到商家在批發市場為您成功採購到水果後，才會依實際出貨品項執行最終扣款。\n🏦 銀行轉帳：下單後系統會將轉帳帳戶資訊發送至您的信箱。請注意：款項必須在該波預購截止時間（明確標示於網頁與郵件中）前正式入帳，否則訂單將自動取消。\n🤝 面交時支付現金：為了防範惡意棄單，此選項僅開放給總金額「低於 30 歐元」且「過去曾在本網站成功完成至少一次交易」的老客戶使用。款項於面交當天交付即可。',
+      '我們提供三種安全可靠的付款方式，並依據您的購物模式（現貨 / 快閃）彈性調整：\n💳 信用卡（Stripe 加密系統）：\n－ 購買「現貨」商品：下單時即時完成扣款。\n－ 參與「快閃」活動：結帳時系統僅先取得信用卡授權（保留額度），此時並不會實際扣款。直到商家在批發市場為您成功採購到水果後，才會依實際出貨品項執行最終扣款。\n🏦 銀行轉帳：下單後系統會將轉帳帳戶資訊發送至您的信箱。請注意：款項必須在該波快閃截止時間（明確標示於網頁與郵件中）前正式入帳，否則訂單將自動取消。\n🤝 面交時支付現金：僅開放給總金額「低於 30 歐元」的訂單。款項於面交當天交付即可。',
     answerFr:
-      'Nous proposons trois modes de paiement sécurisés, adaptés à nos deux formules (En Stock / En Précommande) :\n💳 Carte bancaire (Stripe) :\n－ Pour les produits en Stock : débit immédiat à la commande.\n－ Pour les Précommandes : Stripe prend une simple pré-autorisation (bloque le montant) sans débiter votre compte. Le débit réel (total ou partiel) n\'intervient qu\'une fois vos fruits achetés au marché de gros.\n🏦 Virement bancaire : nos coordonnées vous sont envoyées par e-mail après la commande. Attention : pour être validé, le virement doit impérativement arriver sur notre compte avant l\'heure limite de clôture de la session de précommande (indiquée sur le site).\n🤝 Espèces au retrait : pour éviter les désistements, cette option est disponible uniquement pour les commandes de moins de 30 € ET réservée exclusivement aux clients ayant déjà récupéré au moins une première commande sur notre site. Le règlement se fait le jour de la remise.',
+      'Nous proposons trois modes de paiement sécurisés, adaptés à nos deux formules (En Stock / Flash) :\n💳 Carte bancaire (Stripe) :\n－ Pour les produits en Stock : débit immédiat à la commande.\n－ Pour le Flash : Stripe prend une simple pré-autorisation (bloque le montant) sans débiter votre compte. Le débit réel (total ou partiel) n\'intervient qu\'une fois vos fruits achetés au marché de gros.\n🏦 Virement bancaire : nos coordonnées vous sont envoyées par e-mail après la commande. Attention : pour être validé, le virement doit impérativement arriver sur notre compte avant l\'heure limite de clôture de la session Flash (indiquée sur le site).\n🤝 Espèces au retrait : disponible uniquement pour les commandes de moins de 30 €. Le règlement se fait le jour de la remise.',
   },
   {
     zh: '線上刷卡安全嗎？',
@@ -41,9 +41,9 @@ const faqs: { zh: string; fr: string; answerZh: string; answerFr: string }[] = [
     zh: '我想買 Rungis 市場裡的其他水果，但網站上沒有列出來，也可以嗎？',
     fr: 'Je souhaite acheter des fruits du marché de Rungis qui ne sont pas sur le site, c\'est possible ?',
     answerZh:
-      '完全可以！但須請您提前與我們確認。如果您正在尋找某款 Rungis 市場內有販售、但我們網站上未列出的特定珍稀或當季水果，請務必在該波預購截止時間前至少 48 小時，透過網站聯絡表單與我們聯繫。\n若確認合作的批發商有現貨，我們將透過電子郵件與您確認最終報價。隨後，我們會在您的個人帳戶中開通專屬下單選項，讓您能將該商品加入購物車，並在我們前往市場採購前完成線上信用卡預先授權。恕不接受當天臨時追加或在市場採購現場的即時通訊要求。',
+      '完全可以！但須請您提前與我們確認。如果您正在尋找某款 Rungis 市場內有販售、但我們網站上未列出的特定珍稀或當季水果，請務必在該波快閃截止時間前至少 48 小時，透過網站聯絡表單與我們聯繫。\n若確認合作的批發商有現貨，我們將透過電子郵件與您確認最終報價。隨後，我們會在您的個人帳戶中開通專屬下單選項，讓您能將該商品加入購物車，並在我們前往市場採購前完成線上信用卡預先授權。恕不接受當天臨時追加或在市場採購現場的即時通訊要求。',
     answerFr:
-      'Oui, c\'est tout à fait possible, sous réserve de validation en amont ! Si vous recherchez un fruit exotique ou de saison spécifique disponible à Rungis, contactez-nous via notre formulaire au moins 48 heures avant la clôture de la session de précommande.\nSi le produit est disponible chez nos grossistes, nous convenons ensemble d\'un prix ferme par e-mail. Nous ajoutons ensuite une option personnalisée sur votre compte pour que vous puissiez l\'ajouter à votre panier et valider votre pré-autorisation avant notre départ au marché. Aucune demande de dernière minute ou modification en direct depuis le marché ne pourra être traitée.',
+      'Oui, c\'est tout à fait possible, sous réserve de validation en amont ! Si vous recherchez un fruit exotique ou de saison spécifique disponible à Rungis, contactez-nous via notre formulaire au moins 48 heures avant la clôture de la session Flash.\nSi le produit est disponible chez nos grossistes, nous convenons ensemble d\'un prix ferme par e-mail. Nous ajoutons ensuite une option personnalisée sur votre compte pour que vous puissiez l\'ajouter à votre panier et valider votre pré-autorisation avant notre départ au marché. Aucune demande de dernière minute ou modification en direct depuis le marché ne pourra être traitée.',
   },
   {
     zh: '可以開收據或發票嗎？',

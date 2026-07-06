@@ -12,6 +12,30 @@ function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
+// Normalizes phone input to "country code + last 9 digits".
+// A leading 0 (French local format, e.g. 06 12 34 56 78) is replaced with +33.
+// Anything already starting with + is kept as typed, just stripped of non-digits.
+function formatPhone(raw: string): string {
+  const cleaned = raw.replace(/[^\d+]/g, '')
+  if (cleaned.startsWith('0')) {
+    return `+33${cleaned.slice(1, 10)}`
+  }
+  if (cleaned.startsWith('+')) {
+    return `+${cleaned.slice(1).replace(/\+/g, '')}`
+  }
+  return cleaned
+}
+
+// French numbers (+33) must have exactly 9 digits after the country code;
+// anything else just gets a general sanity check on overall digit count.
+function isValidPhone(value: string): boolean {
+  const digits = value.replace(/\D/g, '')
+  if (value.startsWith('+33')) return digits.length === 11
+  return digits.length >= 8 && digits.length <= 15
+}
+
+const MIN_ORDER_CENTS = 1600
+
 const inputClass =
   'w-full rounded-xl border border-midnight/20 px-4 py-3 text-sm text-midnight placeholder-midnight/30 focus:outline-none focus:ring-2 focus:ring-midnight/30 bg-white'
 
@@ -23,46 +47,52 @@ const PAYMENT_OPTIONS: {
   description: string
 }[] = [
   {
-    id: 'stripe',
-    label: 'Carte bancaire',
-    labelZh: '信用卡',
-    icon: '💳',
-    description: 'Paiement sécurisé via Stripe',
-  },
-  {
     id: 'virement',
     label: 'Virement bancaire',
     labelZh: '銀行轉帳',
     icon: '🏦',
-    description: 'Coordonnées bancaires envoyées par email',
+    description: '銀行資訊於下方，也會以 email 寄送，請選擇即時轉帳 (instané)',
+  },
+  {
+    id: 'stripe',
+    label: 'Carte bancaire',
+    labelZh: '信用卡',
+    icon: '💳',
+    description: '將會跳轉到 Stripe 頁面付款',
   },
   {
     id: 'pay_on_pickup',
     label: 'Paiement à la livraison',
     labelZh: '面交付款',
     icon: '🤝',
-    description: 'Espèces ou virement lors du retrait',
+    description: '接受現金或 sans contact 的歐元信用卡',
   },
 ]
 
+type SummaryProduct = {
+  name_tw: string
+  name_fr: string
+  unit_price: number
+  unit_label: string
+  preference_options?: string[]
+}
+
 function OrderSummaryBox({
-  titleZh,
-  titleFr,
   orderItems,
   products,
   selected,
   onSelect,
   showSelector,
-  note,
+  preferences,
+  onPreferenceChange,
 }: {
-  titleZh: string
-  titleFr: string
   orderItems: [string, number][]
-  products: Record<string, { name_tw: string; name_fr: string; unit_price: number; unit_label: string }>
+  products: Record<string, SummaryProduct>
   selected: boolean
   onSelect: () => void
   showSelector: boolean
-  note?: string
+  preferences: Record<string, string>
+  onPreferenceChange: (productId: string, option: string) => void
 }) {
   const total = orderItems.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
 
@@ -85,8 +115,8 @@ function OrderSummaryBox({
             {selected && <span className="w-1.5 h-1.5 rounded-full bg-yellow block" />}
           </span>
         )}
-        <h2 className="font-bold text-midnight text-xs uppercase tracking-wider">
-          {titleZh} · {titleFr}
+        <h2 className="font-bold text-midnight text-sm uppercase tracking-wider">
+          訂單 · Votre commande
         </h2>
       </div>
 
@@ -94,17 +124,52 @@ function OrderSummaryBox({
         {orderItems.map(([id, qty]) => {
           const p = products[id]
           if (!p) return null
+          const options = p.preference_options ?? []
           return (
-            <div key={id} className="flex justify-between items-start gap-2">
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-midnight leading-tight">{p.name_tw}</p>
-                <p className="text-xs text-midnight/40">
-                  {p.name_fr} × {qty} {p.unit_label}
+            <div key={id}>
+              <div className="flex justify-between items-start gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-midnight leading-tight">{p.name_tw}</p>
+                  <p className="text-sm text-midnight/40">
+                    {p.name_fr} × {qty} {p.unit_label}
+                  </p>
+                </div>
+                <p className="font-semibold text-midnight tabular-nums shrink-0">
+                  {centsToEur(p.unit_price * qty)} €
                 </p>
               </div>
-              <p className="text-sm font-bold text-midnight tabular-nums shrink-0">
-                {centsToEur(p.unit_price * qty)} €
-              </p>
+
+              {options.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-xs text-midnight/60 mb-1.5 leading-snug">
+                    請選擇偏好，但不能保證一定是該選項；使用刷卡或匯款者，多收的錢會退還
+                    <br />
+                    Choisissez votre préférence — sans garantie de l&apos;obtenir ; en cas de trop-perçu (carte ou virement), vous serez remboursé.
+                    {' '}<span className="text-red-400">*</span>
+                  </p>
+                  <div className="space-y-1">
+                    {options.map(option => {
+                      const checked = preferences[id] === option
+                      return (
+                        <label
+                          key={option}
+                          onClick={e => e.stopPropagation()}
+                          className="flex items-center gap-2 text-xs text-midnight cursor-pointer"
+                        >
+                          <input
+                            type="radio"
+                            name={`preference-${id}`}
+                            checked={checked}
+                            onChange={() => onPreferenceChange(id, option)}
+                            className="w-4 h-4 border-midnight/30 text-midnight focus:ring-2 focus:ring-midnight/20"
+                          />
+                          {option}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}
@@ -114,8 +179,6 @@ function OrderSummaryBox({
         <p className="text-sm font-bold text-midnight">Total</p>
         <p className="text-sm font-bold text-midnight tabular-nums">{centsToEur(total)} €</p>
       </div>
-
-      {note && <p className="text-xs text-midnight/30 mt-3 leading-relaxed">{note}</p>}
     </div>
   )
 }
@@ -129,23 +192,18 @@ export default function CheckoutPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [lineUsername, setLineUsername] = useState('')
   const [slotId, setSlotId] = useState('')
   const [note, setNote] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe')
-  const [payOnPickupEligible, setPayOnPickupEligible] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loggedIn, setLoggedIn] = useState(false)
-  const [selectedOrderType, setSelectedOrderType] = useState<'instock' | 'preorder'>('instock')
+  const [preferences, setPreferences] = useState<Record<string, string>>({})
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
-  const instockItems = items.filter(([id]) => products[id]?.stock_quantity != null)
-  const preorderItems = items.filter(([id]) => products[id]?.stock_quantity == null)
-  const hasBoth = instockItems.length > 0 && preorderItems.length > 0
-
-  const activeItems = hasBoth
-    ? (selectedOrderType === 'instock' ? instockItems : preorderItems)
-    : items
+  const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
+  const belowMinimum = subtotal < MIN_ORDER_CENTS
 
   useEffect(() => {
     if (items.length === 0) router.replace('/')
@@ -159,9 +217,8 @@ export default function CheckoutPage() {
         setFirstName(data.prenom ?? '')
         setLastName(data.nom ?? '')
         setEmail(data.email ?? '')
-        setPhone(data.phone ?? '')
+        setPhone(formatPhone(data.phone ?? ''))
         setLoggedIn(true)
-        if (data.email) checkEligibility(data.email)
       })
       .catch(() => {})
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -184,33 +241,61 @@ export default function CheckoutPage() {
       .catch(console.error)
   }, [])
 
-  async function checkEligibility(emailValue: string) {
-    if (!emailValue.includes('@')) return
-    try {
-      const res = await fetch(`/api/customer/eligibility?email=${encodeURIComponent(emailValue)}`)
-      const data = await res.json()
-      setPayOnPickupEligible(data.eligible === true)
-      if (!data.eligible && paymentMethod === 'pay_on_pickup') setPaymentMethod('stripe')
-    } catch {
-      // silently fail — server enforces it anyway
-    }
+  function handlePreferenceChange(productId: string, option: string) {
+    setPreferences(prev => ({ ...prev, [productId]: option }))
   }
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('請填寫名字與姓氏 · Veuillez indiquer votre prénom et nom')
+      return
+    }
+    if (!email.trim()) {
+      setError('請填寫 Email · Veuillez indiquer votre email')
+      return
+    }
+    if (!phone.trim()) {
+      setError('請填寫電話 · Veuillez indiquer votre téléphone')
+      return
+    }
+    if (!isValidPhone(phone)) {
+      setError('電話號碼長度不正確 · Numéro de téléphone invalide')
+      return
+    }
+    if (slots.length > 0 && !slotId) {
+      setError('請選擇面交時段與地點 · Veuillez choisir un créneau de retrait')
+      return
+    }
+
+    const missingPreference = items.some(
+      ([id]) => (products[id]?.preference_options?.length ?? 0) > 0 && !preferences[id],
+    )
+    if (missingPreference) {
+      setError('Veuillez choisir une option pour chaque produit · 請為每項商品選擇一個選項')
+      return
+    }
+
+    if (belowMinimum) {
+      setError('訂單金額過低 · Montant de la commande trop faible')
+      return
+    }
+
     setLoading(true)
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cartItems: activeItems.map(([id, qty]) => ({ id, qty })),
+          cartItems: items.map(([id, qty]) => ({ id, qty, preference: preferences[id] })),
           customer: {
             prenom: firstName.trim(),
             nom: lastName.trim(),
             email,
             phone,
+            line_username: lineUsername.trim() || undefined,
             pickup_slot_id: slotId || null,
             note,
             payment_method: paymentMethod,
@@ -246,30 +331,21 @@ export default function CheckoutPage() {
           ← Retour · 返回
         </Link>
 
-        {/* Warning banner — always shown */}
-        <div className="mb-6 bg-red-600 text-white rounded-xl px-4 py-3">
-          <p className="text-sm font-bold mb-0.5">⚠️ 現貨與預購需分開結帳</p>
-          <p className="text-xs text-white/80 leading-relaxed">
-            Les articles en stock et en précommande doivent être passés en deux commandes séparées.
-            {hasBoth && ' Sélectionnez ci-dessous quelle commande vous souhaitez passer maintenant. · 請選擇您本次要結帳的品項。'}
-          </p>
-        </div>
-
         <h1 className="text-2xl font-bold text-midnight mb-8 tracking-tight">
-          Récapitulatif · 結帳確認
+          結帳確認 · Récapitulatif
         </h1>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6 items-start">
           {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white border border-midnight/10 rounded-2xl shadow-xl p-6 space-y-5">
-            <h2 className="font-bold text-midnight text-xs uppercase tracking-wider">
-              Vos coordonnées · 聯絡資料
+          <form onSubmit={handleSubmit} className="order-2 md:order-1 bg-white border border-midnight/10 rounded-2xl shadow-xl p-6 space-y-5">
+            <h2 className="font-bold text-midnight text-sm uppercase tracking-wider">
+              聯絡資料 · Vos coordonnées
             </h2>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  Prénom · 名字 <span className="text-red-400">*</span>
+                  名字 · Prénom <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -282,7 +358,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  Nom · 姓氏 <span className="text-red-400">*</span>
+                  姓氏 · Nom <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -303,7 +379,6 @@ export default function CheckoutPage() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                onBlur={e => checkEligibility(e.target.value)}
                 required
                 disabled={loggedIn}
                 placeholder="sophie@example.com"
@@ -313,15 +388,29 @@ export default function CheckoutPage() {
 
             <div>
               <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                Téléphone · 電話 <span className="text-red-400">*</span>
+                電話 · Téléphone <span className="text-red-400">*</span>
                 <span className="normal-case ml-1 text-midnight/35">（面交聯絡用）</span>
               </label>
               <input
                 type="tel"
                 value={phone}
-                onChange={e => setPhone(e.target.value)}
+                onChange={e => setPhone(formatPhone(e.target.value))}
                 required
                 placeholder="+33 6 xx xx xx xx"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
+                Line 使用者名稱
+                <span className="normal-case ml-1 text-midnight/35">（選填，可使用 Line@直接與老闆聯絡）</span>
+              </label>
+              <input
+                type="text"
+                value={lineUsername}
+                onChange={e => setLineUsername(e.target.value)}
+                placeholder="Optionnel"
                 className={inputClass}
               />
             </div>
@@ -329,7 +418,7 @@ export default function CheckoutPage() {
             {slots.length > 0 && (
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  Créneau de retrait · 取貨時段 <span className="text-red-400">*</span>
+                  面交時段與地點 · Créneau de retrait <span className="text-red-400">*</span>
                 </label>
                 <select
                   value={slotId}
@@ -343,65 +432,61 @@ export default function CheckoutPage() {
                     </option>
                   ))}
                 </select>
-                {slotId && slots.find(s => s.id === slotId)?.location && (
-                  <p className="text-xs text-midnight/40 mt-1.5 pl-1">
-                    {slots.find(s => s.id === slotId)!.location}
-                  </p>
-                )}
               </div>
             )}
 
             {/* Payment method */}
             <div>
-              <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider font-bold">
-                Mode de paiement · 付款方式 <span className="text-red-400">*</span>
+              <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider font-semibold">
+                付款方式 · Mode de paiement<span className="text-red-400">*</span>
+              </p>
+              <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider">
+                 (若沒有偏好的話歡迎轉帳或現金，我就不用付手續費了🙇🏻‍♀️)
               </p>
               <div className="space-y-2">
                 {PAYMENT_OPTIONS.map(opt => {
-                  const disabled = opt.id === 'pay_on_pickup' && !payOnPickupEligible
                   const selected = paymentMethod === opt.id
 
                   return (
-                    <div key={opt.id} className="relative group">
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => !disabled && setPaymentMethod(opt.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-colors ${
-                          disabled
-                            ? 'opacity-40 cursor-not-allowed border-midnight/10 bg-midnight/3'
-                            : selected
-                            ? 'border-midnight bg-midnight/4'
-                            : 'border-midnight/15 hover:border-midnight/30 bg-white'
-                        }`}
-                      >
-                        <span className="text-xl shrink-0">{opt.icon}</span>
-                        <div className="min-w-0">
-                          <p className={`text-sm font-bold ${disabled ? 'text-midnight/40' : 'text-midnight'}`}>
-                            {opt.label} · {opt.labelZh}
-                          </p>
-                          <p className="text-xs text-midnight/40">{opt.description}</p>
-                        </div>
-                        {selected && !disabled && (
-                          <span className="ml-auto shrink-0 w-4 h-4 rounded-full bg-midnight" />
-                        )}
-                      </button>
-
-                      {/* Tooltip for disabled pay_on_pickup */}
-                      {disabled && (
-                        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
-                          Nécessite au moins une commande complétée.
-                          <br />
-                          <span className="text-white/60 text-[10px]">
-                            需要至少一次完成的訂單才可選擇。<br/>惡意放鳥者將被列入黑名單 🚫
-                          </span>
-                          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-midnight" />
-                        </div>
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setPaymentMethod(opt.id)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-colors ${
+                        selected
+                          ? 'border-midnight bg-midnight/4'
+                          : 'border-midnight/15 hover:border-midnight/30 bg-white'
+                      }`}
+                    >
+                      <span className="text-xl shrink-0">{opt.icon}</span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-midnight">
+                          {opt.labelZh} · {opt.label}
+                        </p>
+                        <p className="text-xs text-midnight/75">{opt.description}</p>
+                      </div>
+                      {selected && (
+                        <span className="ml-auto shrink-0 w-4 h-4 rounded-full bg-midnight" />
                       )}
-                    </div>
+                    </button>
                   )
                 })}
               </div>
+
+              {paymentMethod === 'virement' && (
+                <div className="mt-3 rounded-xl border border-magenta/30 bg-magenta/5 px-4 py-3 text-xs text-midnight space-y-1">
+                  <p><span className="font-bold">IBAN</span> : FR76 3083 3830 0007 4170 1921 987</p>
+                  <p><span className="font-bold">BIC</span> : FNOMFRP2</p>
+                  <p><span className="font-bold">Bénéficiaire</span> : Yi-Hsuan LEE EI</p>
+                  <p><span className="font-bold">Adresse</span> : AVENUE DAUMESNIL, 169, PARIS, 75012, FRANCE</p>
+                  <p><span className="font-bold">Banque</span> : FINOM PAYMENTS</p>
+                  <p className="text-midnight/50 pt-1 leading-relaxed">
+                    Veuillez noter que ce compte prend uniquement en charge les virements SEPA.
+                    <br />
+                    請注意，此帳戶僅支援 SEPA 歐元區轉帳。
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>
@@ -412,8 +497,8 @@ export default function CheckoutPage() {
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 rows={3}
-                placeholder="Allergie, message particulier… / 過敏資訊、特別備註…"
-                className={`${inputClass} resize-none`}
+                placeholder="許願下次面交地點、水果品項⋯⋯或是單純跟老闆閒聊"
+                className={`${inputClass} resize-none text-xs`}
               />
             </div>
 
@@ -421,17 +506,28 @@ export default function CheckoutPage() {
               <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading
-                ? 'Chargement… · 處理中…'
-                : paymentMethod === 'stripe'
-                ? 'Payer avec Stripe · 前往付款 →'
-                : 'Confirmer la commande · 確認訂單 →'}
-            </button>
+            <div className="relative group">
+              <button
+                type="submit"
+                disabled={loading || belowMinimum}
+                className="w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? 'Chargement… · 處理中…'
+                  : paymentMethod === 'stripe'
+                  ? 'Payer avec Stripe · 前往付款 →'
+                  : 'Confirmer la commande · 確認訂單 →'}
+              </button>
+
+              {belowMinimum && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
+                  必須訂至少兩顆水果
+                  <br />
+                  <span className="text-white/80 text-xs">Il faut commander au moins 2 fruits</span>
+                  <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-midnight" />
+                </div>
+              )}
+            </div>
 
             {paymentMethod === 'stripe' && (
               <p className="text-xs text-midnight/30 text-center">
@@ -441,41 +537,17 @@ export default function CheckoutPage() {
           </form>
 
           {/* Order summary */}
-          {hasBoth ? (
-            <div className="space-y-4">
-              <OrderSummaryBox
-                titleZh="現貨"
-                titleFr="En stock"
-                orderItems={instockItems}
-                products={products}
-                selected={selectedOrderType === 'instock'}
-                onSelect={() => setSelectedOrderType('instock')}
-                showSelector={true}
-                note="Retrait en main propre à Paris · 巴黎面交取貨"
-              />
-              <OrderSummaryBox
-                titleZh="預購"
-                titleFr="Précommande"
-                orderItems={preorderItems}
-                products={products}
-                selected={selectedOrderType === 'preorder'}
-                onSelect={() => setSelectedOrderType('preorder')}
-                showSelector={true}
-                note="Retrait en main propre à Paris · 巴黎面交取貨"
-              />
-            </div>
-          ) : (
+          <div className="order-1 md:order-2">
             <OrderSummaryBox
-              titleZh="訂單"
-              titleFr="Votre commande"
               orderItems={items}
               products={products}
               selected={false}
               onSelect={() => {}}
               showSelector={false}
-              note="Retrait en main propre à Paris · 巴黎面交取貨"
+              preferences={preferences}
+              onPreferenceChange={handlePreferenceChange}
             />
-          )}
+          </div>
         </div>
       </div>
     </main>

@@ -4,12 +4,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 
 type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
-type CartItem = { id: string; qty: number }
+type CartItem = { id: string; qty: number; preference?: string }
 type Customer = {
   nom: string
   prenom: string
   email: string
   phone?: string
+  line_username?: string
   pickup_slot_id?: string | null
   note?: string
   payment_method: PaymentMethod
@@ -24,6 +25,7 @@ type ItemSnapshot = {
   promo_price: number | null
   qty: number
   line_total: number
+  preference: string | null
 }
 
 export async function POST(request: Request) {
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
   // Fetch server-authoritative prices and stock — never trust client amounts
   const { data: dbProducts, error: dbError } = await supabase
     .from('products')
-    .select('id, name_fr, name_tw, unit_price, promo_price, promo_until, unit_label, available, stock_quantity')
+    .select('id, name_fr, name_tw, unit_price, promo_price, promo_until, unit_label, visible_instock, stock_quantity, preference_options')
     .in(
       'id',
       cartItems.map(i => i.id),
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
     const product = dbProducts.find(p => p.id === cartItem.id)
     if (!product)
       return NextResponse.json({ error: 'Produit introuvable · 找不到商品' }, { status: 400 })
-    if (!product.available)
+    if (!product.visible_instock)
       return NextResponse.json(
         { error: `${product.name_fr} n'est plus disponible · 商品已下架` },
         { status: 400 },
@@ -81,6 +83,18 @@ export async function POST(request: Request) {
         { status: 400 },
       )
 
+    // Validate preference against the product's allowed options
+    const options: string[] = Array.isArray(product.preference_options) ? product.preference_options : []
+    let preference: string | null = null
+    if (options.length > 0) {
+      if (!cartItem.preference || !options.includes(cartItem.preference))
+        return NextResponse.json(
+          { error: `Veuillez choisir une option pour ${product.name_fr} · 請為 ${product.name_tw} 選擇一個選項` },
+          { status: 400 },
+        )
+      preference = cartItem.preference
+    }
+
     const effectivePrice =
       product.promo_price != null &&
       product.promo_until != null &&
@@ -93,7 +107,7 @@ export async function POST(request: Request) {
         currency: 'eur',
         product_data: {
           name: `${product.name_tw} · ${product.name_fr}`,
-          description: `${cartItem.qty} × ${product.unit_label}`,
+          description: `${cartItem.qty} × ${product.unit_label}${preference ? ` · ${preference}` : ''}`,
         },
         unit_amount: effectivePrice,
       },
@@ -109,26 +123,12 @@ export async function POST(request: Request) {
       promo_price: product.promo_price ?? null,
       qty: cartItem.qty,
       line_total: effectivePrice * cartItem.qty,
+      preference,
     })
   }
 
   const subtotal = itemsSnapshot.reduce((sum, i) => sum + i.line_total, 0)
   const paymentMethod: PaymentMethod = customer.payment_method ?? 'stripe'
-
-  // Server-side enforcement: pay_on_pickup requires has_complete_order
-  if (paymentMethod === 'pay_on_pickup') {
-    const { data: existing } = await supabase
-      .from('customers')
-      .select('has_complete_order')
-      .eq('email', customer.email.trim().toLowerCase())
-      .single()
-    if (!existing?.has_complete_order) {
-      return NextResponse.json(
-        { error: 'Le paiement à la livraison nécessite au moins une commande complétée.' },
-        { status: 403 },
-      )
-    }
-  }
 
   const { data: order, error: orderError } = await supabase
     .from('orders')
@@ -142,6 +142,7 @@ export async function POST(request: Request) {
       customer_nom: customer.nom.trim(),
       customer_email: customer.email.trim().toLowerCase(),
       customer_phone: customer.phone?.trim() || null,
+      line_username: customer.line_username?.trim() || null,
       note: customer.note?.trim() || null,
     })
     .select('id, order_number, tracking_token')
