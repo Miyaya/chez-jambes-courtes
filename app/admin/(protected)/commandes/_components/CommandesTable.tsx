@@ -363,12 +363,24 @@ export function CommandesTable({
                   </td>
 
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => openEditDialog(order)}
-                      className="text-xs text-midnight/40 hover:text-midnight border border-midnight/15 rounded-lg px-2.5 py-1.5 hover:border-midnight/30 transition-colors whitespace-nowrap"
-                    >
-                      Modifier
-                    </button>
+                    <div className="flex gap-1.5">
+                      <button
+                        onClick={() => openEditDialog(order)}
+                        className="text-xs text-midnight/40 hover:text-midnight border border-midnight/15 rounded-lg px-2.5 py-1.5 hover:border-midnight/30 transition-colors whitespace-nowrap"
+                      >
+                        Modifier
+                      </button>
+                      {order.status === 'complete' && (
+                        <a
+                          href={`/api/admin/invoices/${order.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-midnight/40 hover:text-midnight border border-midnight/15 rounded-lg px-2.5 py-1.5 hover:border-midnight/30 transition-colors whitespace-nowrap"
+                        >
+                          Facture
+                        </a>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )
