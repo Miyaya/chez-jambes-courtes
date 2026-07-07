@@ -12,12 +12,11 @@ import { ProfileForm } from './_components/ProfileForm'
 
 export const metadata = { title: 'Mon compte · 我的帳號 — Chez Jambes Courtes' }
 
-type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
+type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS_LABEL: Record<OrderStatus, { fr: string; zh: string; color: string }> = {
-  received:          { fr: 'Reçue',                    zh: '已收到',   color: 'bg-yellow/20 text-midnight' },
-  accepted:          { fr: 'Acceptée',                 zh: '已接受',   color: 'bg-blue-50 text-blue-700' },
-  processing:        { fr: 'En traitement',             zh: '處理中',   color: 'bg-blue-50 text-blue-700' },
+  received_preorder: { fr: 'Reçue (flash)',            zh: '已收到（快閃）', color: 'bg-yellow/20 text-midnight' },
+  received_instock:  { fr: 'Reçue (en stock)',         zh: '已收到（現貨）', color: 'bg-yellow/20 text-midnight' },
   validated:         { fr: 'Validée',                  zh: '已確認',   color: 'bg-green-50 text-green-700' },
   partial_validated: { fr: 'Partiellement validée',    zh: '部分確認', color: 'bg-amber-50 text-amber-700' },
   complete:          { fr: 'Terminée',                 zh: '已完成',   color: 'bg-midnight/8 text-midnight' },
@@ -197,7 +196,7 @@ export default async function ComptePage() {
             <ul className="space-y-3">
               {orders.map(order => {
                 const status = order.status as OrderStatus
-                const label = STATUS_LABEL[status] ?? STATUS_LABEL.received
+                const label = STATUS_LABEL[status] ?? STATUS_LABEL.received_preorder
                 // @ts-expect-error — Supabase nested select returns object not array
                 const slotLabel = order.pickup_slots?.label as string | undefined
                 return (

@@ -30,7 +30,7 @@ export function NouvelAchatDialog() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+            className="bg-white rounded-2xl border border-midnight/10 w-full max-w-md"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6">
@@ -42,7 +42,7 @@ export function NouvelAchatDialog() {
               <form ref={formRef} action={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1.5">
-                    Date d&apos;achat · 採購日期 <span className="text-red-400">*</span>
+                    Date d&apos;achat · 採購日期 <span className="text-magenta">*</span>
                   </label>
                   <input type="date" name="purchase_date" required className={inputClass} />
                 </div>

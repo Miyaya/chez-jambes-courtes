@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { fetchCustomerOrdersAction } from '../actions'
 
-type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
+type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
 const STATUS: Record<OrderStatus, { label: string; color: string }> = {
-  received:          { label: 'Reçue',          color: 'bg-yellow/20 text-midnight' },
-  accepted:          { label: 'Acceptée',        color: 'bg-blue-50 text-blue-700' },
-  processing:        { label: 'En traitement',   color: 'bg-blue-100 text-blue-800' },
-  validated:         { label: 'Validée',         color: 'bg-green-50 text-green-700' },
-  partial_validated: { label: 'Part. validée',   color: 'bg-amber-50 text-amber-700' },
+  received_preorder: { label: 'Reçue (flash)',    color: 'bg-yellow/20 text-midnight' },
+  received_instock:  { label: 'Reçue (en stock)', color: 'bg-yellow/20 text-midnight' },
+  validated:         { label: 'Validée',         color: 'bg-green/15 text-dark-green' },
+  partial_validated: { label: 'Part. validée',   color: 'bg-orange/12 text-orange' },
   complete:          { label: 'Terminée',        color: 'bg-midnight/8 text-midnight' },
   canceled:          { label: 'Annulée',         color: 'bg-midnight/5 text-midnight/40' },
 }
@@ -85,7 +84,7 @@ export function ClientOrdersDialog({
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col"
+            className="bg-white rounded-2xl border border-midnight/10 w-full max-w-lg max-h-[85vh] flex flex-col"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
@@ -115,7 +114,7 @@ export function ClientOrdersDialog({
 
               {!loading && orders?.map(order => {
                 const isOpen = expanded.has(order.id)
-                const s = STATUS[order.status] ?? STATUS.received
+                const s = STATUS[order.status] ?? STATUS.received_preorder
 
                 return (
                   <div key={order.id} className="border border-midnight/10 rounded-xl overflow-hidden">
@@ -168,7 +167,7 @@ export function ClientOrdersDialog({
                             </div>
                           )}
                           {order.discount_amount > 0 && (
-                            <div className="flex justify-between text-xs text-green-600">
+                            <div className="flex justify-between text-xs text-dark-green">
                               <span>Réduction</span>
                               <span className="tabular-nums">−{centsToEur(order.discount_amount)} €</span>
                             </div>
@@ -180,7 +179,7 @@ export function ClientOrdersDialog({
                         </div>
 
                         {order.note && (
-                          <div className="mt-3 bg-yellow-50 rounded-lg px-3 py-2">
+                          <div className="mt-3 bg-yellow/12 rounded-lg px-3 py-2">
                             <p className="text-xs text-midnight/40 mb-0.5">Note</p>
                             <p className="text-xs text-midnight">{order.note}</p>
                           </div>

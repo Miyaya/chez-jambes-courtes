@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
 
   return (
     <main className="flex flex-col min-h-screen bg-white items-center justify-center px-6 py-16">
-      <div className="w-full max-w-sm bg-white border border-midnight/10 rounded-2xl shadow-xl overflow-hidden">
+      <div className="w-full max-w-sm bg-white border border-midnight/15 rounded-2xl overflow-hidden">
         <div className="h-1.5 bg-yellow" />
         <div className="p-8">
           <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 mb-6 text-center">
@@ -43,7 +43,7 @@ export default function AdminLoginPage() {
           </h1>
 
           {error && (
-            <p className="text-xs text-red-500 bg-red-50 rounded-xl px-4 py-3 mb-5 text-center">
+            <p className="text-xs text-magenta bg-magenta/8 rounded-xl px-4 py-3 mb-5 text-center">
               {error}
             </p>
           )}
@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full border-2 border-midnight/15 rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:border-midnight"
+              className="w-full border-2 border-midnight/15 rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:border-magenta"
             />
             <input
               type="password"
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
               placeholder="Mot de passe"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full border-2 border-midnight/15 rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:border-midnight"
+              className="w-full border-2 border-midnight/15 rounded-xl px-4 py-3 text-sm text-midnight focus:outline-none focus:border-magenta"
             />
             <button
               type="submit"

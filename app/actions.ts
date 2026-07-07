@@ -10,7 +10,11 @@ type SubscribeResult =
   | { data: 'subscribed'; error: null }
   | { data: null; error: 'already_subscribed' | 'email_failed' | 'unknown'; detail?: string }
 
-export async function subscribeAction(email: string, name: string): Promise<SubscribeResult> {
+export async function subscribeAction(
+  email: string,
+  name: string,
+  source: 'prelaunch' | 'checkout' = 'prelaunch',
+): Promise<SubscribeResult> {
   const supabase = createServerClient()
 
   const cleanEmail = email.trim().toLowerCase()
@@ -19,7 +23,7 @@ export async function subscribeAction(email: string, name: string): Promise<Subs
   const { error: dbError } = await supabase.from('subscribers').insert({
     email: cleanEmail,
     name: cleanName,
-    source: 'prelaunch',
+    source,
     active: true,
   })
 

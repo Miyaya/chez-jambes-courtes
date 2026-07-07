@@ -89,11 +89,23 @@ export async function createProductAction(formData: FormData) {
   const image_url       = (formData.get('image_url') as string).trim() || null
   const description     = (formData.get('description') as string).trim() || null
   const visible_instock = formData.get('visible_instock') === 'on'
+  const visible_flash   = formData.get('visible_flash') === 'on'
+  const has_price_range = formData.get('has_price_range') === 'on'
+
+  let preference_options: string[] = []
+  try {
+    const parsed = JSON.parse((formData.get('preference_options') as string) || '[]')
+    if (Array.isArray(parsed)) preference_options = parsed.filter(o => typeof o === 'string' && o.trim()).map(o => o.trim())
+  } catch {
+    // ignore malformed input, fall back to empty list
+  }
 
   const supabase = createAdminClient()
   await supabase.from('products').insert({
     name_fr, name_tw, origin, unit_label, unit_price,
-    stock_quantity, supplier, cost, image_url, description, visible_instock,
+    stock_quantity, supplier, cost, image_url, description,
+    visible_instock, visible_flash, has_price_range,
+    preference_options,
   })
   revalidatePath('/admin/produits')
 }

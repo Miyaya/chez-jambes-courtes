@@ -27,7 +27,7 @@ function Toggle({ on, label, sublabel, action }: {
           aria-label={on ? 'Désactiver' : 'Activer'}
         >
           <span
-            className={`absolute top-1 left-0 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+            className={`absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
               on ? 'translate-x-6' : 'translate-x-1'
             }`}
           />
@@ -55,7 +55,7 @@ export default async function CampaignAdminPage() {
     <div>
       <h1 className="text-lg font-bold text-midnight mb-6">Bandeau · 跑馬燈</h1>
 
-      <div className="bg-white rounded-2xl border border-midnight/8 shadow-sm divide-y divide-midnight/8 max-w-2xl">
+      <div className="bg-white rounded-2xl border border-midnight/8 divide-y divide-midnight/8 max-w-2xl">
 
         <div className="p-6">
           <Toggle

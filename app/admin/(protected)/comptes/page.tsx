@@ -29,7 +29,7 @@ export default async function ClientsAdminPage() {
       <h1 className="text-lg font-bold text-midnight mb-1">Clients</h1>
       <p className="text-sm text-midnight/40 mb-6">{customers?.length ?? 0} client{(customers?.length ?? 0) > 1 ? 's' : ''}</p>
 
-      <div className="bg-white rounded-2xl border border-midnight/8 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-midnight/8 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-midnight/8 text-left">

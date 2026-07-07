@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/app/_components/CartProvider'
+import { subscribeAction } from '@/app/actions'
+import { BANK_INFO } from '@/lib/bank-info'
 
 type PickupSlot = { id: string; label: string; location: string | null }
-type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
+type PaymentMethod = 'virement' | 'stripe' | 'pay_on_pickup'
 
 function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
@@ -99,7 +101,7 @@ function OrderSummaryBox({
   return (
     <div
       onClick={showSelector ? onSelect : undefined}
-      className={`bg-white rounded-2xl shadow-xl p-6 transition-colors ${
+      className={`bg-white rounded-2xl p-6 transition-colors ${
         showSelector
           ? selected
             ? 'border-2 border-midnight cursor-pointer'
@@ -145,7 +147,7 @@ function OrderSummaryBox({
                     請選擇偏好，但不能保證一定是該選項；使用刷卡或匯款者，多收的錢會退還
                     <br />
                     Choisissez votre préférence — sans garantie de l&apos;obtenir ; en cas de trop-perçu (carte ou virement), vous serez remboursé.
-                    {' '}<span className="text-red-400">*</span>
+                    {' '}<span className="text-magenta">*</span>
                   </p>
                   <div className="space-y-1">
                     {options.map(option => {
@@ -195,11 +197,13 @@ export default function CheckoutPage() {
   const [lineUsername, setLineUsername] = useState('')
   const [slotId, setSlotId] = useState('')
   const [note, setNote] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stripe')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('virement')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loggedIn, setLoggedIn] = useState(false)
   const [preferences, setPreferences] = useState<Record<string, string>>({})
+  const [newsletter, setNewsletter] = useState(false)
+  const [agreePreorder, setAgreePreorder] = useState(false)
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
@@ -283,8 +287,19 @@ export default function CheckoutPage() {
       return
     }
 
+    if (!agreePreorder) {
+      setError(
+        '請勾選同意預購條款 · Veuillez accepter les conditions de précommande',
+      )
+      return
+    }
+
     setLoading(true)
     try {
+      if (newsletter) {
+        subscribeAction(email, `${firstName.trim()} ${lastName.trim()}`.trim(), 'checkout').catch(() => {})
+      }
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -337,7 +352,7 @@ export default function CheckoutPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6 items-start">
           {/* Form */}
-          <form onSubmit={handleSubmit} className="order-2 md:order-1 bg-white border border-midnight/10 rounded-2xl shadow-xl p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="order-2 md:order-1 bg-white border border-midnight/10 rounded-2xl p-6 space-y-5">
             <h2 className="font-bold text-midnight text-sm uppercase tracking-wider">
               聯絡資料 · Vos coordonnées
             </h2>
@@ -345,7 +360,7 @@ export default function CheckoutPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  名字 · Prénom <span className="text-red-400">*</span>
+                  名字 · Prénom <span className="text-magenta">*</span>
                 </label>
                 <input
                   type="text"
@@ -358,7 +373,7 @@ export default function CheckoutPage() {
               </div>
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  姓氏 · Nom <span className="text-red-400">*</span>
+                  姓氏 · Nom <span className="text-magenta">*</span>
                 </label>
                 <input
                   type="text"
@@ -373,7 +388,7 @@ export default function CheckoutPage() {
 
             <div>
               <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                Email <span className="text-red-400">*</span>
+                Email <span className="text-magenta">*</span>
               </label>
               <input
                 type="email"
@@ -388,7 +403,7 @@ export default function CheckoutPage() {
 
             <div>
               <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                電話 · Téléphone <span className="text-red-400">*</span>
+                電話 · Téléphone <span className="text-magenta">*</span>
                 <span className="normal-case ml-1 text-midnight/35">（面交聯絡用）</span>
               </label>
               <input
@@ -418,7 +433,7 @@ export default function CheckoutPage() {
             {slots.length > 0 && (
               <div>
                 <label className="block text-xs text-midnight/50 mb-1.5 uppercase tracking-wider">
-                  面交時段與地點 · Créneau de retrait <span className="text-red-400">*</span>
+                  面交時段與地點 · Créneau de retrait <span className="text-magenta">*</span>
                 </label>
                 <select
                   value={slotId}
@@ -438,7 +453,7 @@ export default function CheckoutPage() {
             {/* Payment method */}
             <div>
               <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider font-semibold">
-                付款方式 · Mode de paiement<span className="text-red-400">*</span>
+                付款方式 · Mode de paiement<span className="text-magenta">*</span>
               </p>
               <p className="text-xs text-midnight/50 mb-3 uppercase tracking-wider">
                  (若沒有偏好的話歡迎轉帳或現金，我就不用付手續費了🙇🏻‍♀️)
@@ -475,11 +490,10 @@ export default function CheckoutPage() {
 
               {paymentMethod === 'virement' && (
                 <div className="mt-3 rounded-xl border border-magenta/30 bg-magenta/5 px-4 py-3 text-xs text-midnight space-y-1">
-                  <p><span className="font-bold">IBAN</span> : FR76 3083 3830 0007 4170 1921 987</p>
-                  <p><span className="font-bold">BIC</span> : FNOMFRP2</p>
-                  <p><span className="font-bold">Bénéficiaire</span> : Yi-Hsuan LEE EI</p>
-                  <p><span className="font-bold">Adresse</span> : AVENUE DAUMESNIL, 169, PARIS, 75012, FRANCE</p>
-                  <p><span className="font-bold">Banque</span> : FINOM PAYMENTS</p>
+                  <p><span className="font-bold">IBAN</span> : {BANK_INFO.iban}</p>
+                  <p><span className="font-bold">BIC</span> : {BANK_INFO.bic}</p>
+                  <p><span className="font-bold">Bénéficiaire</span> : {BANK_INFO.beneficiary}</p>
+                  <p><span className="font-bold">Banque</span> : {BANK_INFO.bank}</p>
                   <p className="text-midnight/50 pt-1 leading-relaxed">
                     Veuillez noter que ce compte prend uniquement en charge les virements SEPA.
                     <br />
@@ -502,15 +516,56 @@ export default function CheckoutPage() {
               />
             </div>
 
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newsletter}
+                onChange={e => setNewsletter(e.target.checked)}
+                className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
+              />
+              <span className="text-xs text-midnight/55 leading-relaxed">
+                訂閱電子報，收到新品與快閃上架通知（選填）
+                <br />
+                S&apos;abonner à la newsletter pour être informé des nouveautés (optionnel)
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreePreorder}
+                onChange={e => setAgreePreorder(e.target.checked)}
+                required
+                className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
+              />
+              <span className="text-xs text-midnight leading-relaxed">
+                我同意這是預購，並接受可能會沒買到，若沒買到全額退費 <span className="text-magenta">*</span>
+                <br />
+                <span className="text-midnight/55">
+                  J&apos;accepte qu&apos;il s&apos;agit d&apos;une précommande et d&apos;être remboursé(e) intégralement en cas de rupture.
+                </span>
+              </span>
+            </label>
+
             {error && (
-              <p className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-3">{error}</p>
+              <p className="text-sm text-midnight border border-magenta/30 bg-magenta/5 rounded-xl px-4 py-3">
+                {error}
+              </p>
             )}
 
-            <div className="relative group">
+            <div className="relative">
               <button
                 type="submit"
-                disabled={loading || belowMinimum}
-                className="w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl hover:bg-yellow hover:text-midnight border-2 border-midnight transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+                aria-disabled={belowMinimum}
+                onClick={e => {
+                  if (belowMinimum) e.preventDefault()
+                }}
+                className={`peer w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl border-2 border-midnight transition-colors duration-200 disabled:cursor-not-allowed ${
+                  belowMinimum
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'hover:bg-yellow hover:text-midnight disabled:opacity-50'
+                }`}
               >
                 {loading
                   ? 'Chargement… · 處理中…'
@@ -520,7 +575,7 @@ export default function CheckoutPage() {
               </button>
 
               {belowMinimum && (
-                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 peer-hover:opacity-100 peer-focus:opacity-100 peer-active:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
                   必須訂至少兩顆水果
                   <br />
                   <span className="text-white/80 text-xs">Il faut commander au moins 2 fruits</span>

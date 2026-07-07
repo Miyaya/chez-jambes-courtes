@@ -4,16 +4,15 @@ import { NouveauCreneauDialog } from './_components/NouveauCreneauDialog'
 
 export const metadata = { title: 'Pickup — Admin' }
 
-type OrderStatus = 'received' | 'accepted' | 'processing' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
+type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
-const STATUS_LABEL: Record<OrderStatus, { zh: string; color: string }> = {
-  received:          { zh: '已收到',   color: 'bg-yellow/20 text-midnight' },
-  accepted:          { zh: '已接受',   color: 'bg-blue-50 text-blue-700' },
-  processing:        { zh: '處理中',   color: 'bg-blue-50 text-blue-700' },
-  validated:         { zh: '已確認',   color: 'bg-green-50 text-green-700' },
-  partial_validated: { zh: '部分確認', color: 'bg-amber-50 text-amber-700' },
-  complete:          { zh: '已完成',   color: 'bg-midnight/8 text-midnight' },
-  canceled:          { zh: '已取消',   color: 'bg-midnight/5 text-midnight/40' },
+const STATUS_LABEL: Record<OrderStatus, { fr: string; zh: string; color: string }> = {
+  received_preorder: { fr: 'Reçue (flash)',         zh: '已收到（快閃）', color: 'bg-yellow/20 text-midnight' },
+  received_instock:  { fr: 'Reçue (en stock)',      zh: '已收到（現貨）', color: 'bg-yellow/20 text-midnight' },
+  validated:         { fr: 'Validée',               zh: '已確認',   color: 'bg-green/15 text-dark-green' },
+  partial_validated: { fr: 'Partiellement validée', zh: '部分確認', color: 'bg-orange/12 text-orange' },
+  complete:          { fr: 'Terminée',              zh: '已完成',   color: 'bg-midnight/8 text-midnight' },
+  canceled:          { fr: 'Annulée',               zh: '已取消',   color: 'bg-midnight/5 text-midnight/40' },
 }
 
 function centsToEur(cents: number) {
@@ -70,7 +69,7 @@ export default async function PickupAdminPage() {
           const total = activeOrders.reduce((sum, o) => sum + o.subtotal, 0)
 
           return (
-            <div key={slot.id} className="bg-white rounded-2xl border border-midnight/8 shadow-sm overflow-hidden">
+            <div key={slot.id} className="bg-white rounded-2xl border border-midnight/8 overflow-hidden">
               {/* Slot header */}
               <div className="px-5 py-4 border-b border-midnight/8 flex items-start justify-between gap-4">
                 <div>
@@ -117,7 +116,7 @@ export default async function PickupAdminPage() {
                   <tbody className="divide-y divide-midnight/5">
                     {orders.map(order => {
                       const status = order.status as OrderStatus
-                      const label = STATUS_LABEL[status] ?? STATUS_LABEL.received
+                      const label = STATUS_LABEL[status] ?? STATUS_LABEL.received_preorder
                       const items: { name_tw: string; qty: number; unit_label: string; preference?: string | null }[] =
                         Array.isArray(order.items) ? order.items : []
 
@@ -137,7 +136,7 @@ export default async function PickupAdminPage() {
                               <p className="text-xs text-midnight/40">{order.customer_phone}</p>
                             )}
                             {order.note && (
-                              <p className="text-xs text-amber-600 mt-0.5 italic">⚠ {order.note}</p>
+                              <p className="text-xs text-orange mt-0.5 italic">⚠ {order.note}</p>
                             )}
                           </td>
                           <td className="px-4 py-3">
@@ -164,7 +163,7 @@ export default async function PickupAdminPage() {
                           </td>
                           <td className="px-4 py-3">
                             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${label.color}`}>
-                              {label.zh}
+                              {label.fr} · {label.zh}
                             </span>
                           </td>
                         </tr>

@@ -57,7 +57,7 @@ export function EditProduitDialog(props: Props) {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl border border-midnight/10 w-full max-w-md max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6">
@@ -194,7 +194,7 @@ function ToggleField({ label, name, defaultChecked }: { label: string; name: str
       <label className="relative inline-flex items-center cursor-pointer">
         <input type="checkbox" name={name} defaultChecked={defaultChecked} className="sr-only peer" />
         <div className="w-11 h-6 rounded-full bg-midnight/20 peer-checked:bg-midnight transition-colors duration-200" />
-        <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-5" />
+        <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
       </label>
     </div>
   )
@@ -215,7 +215,7 @@ function Field({
   return (
     <div>
       <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
-        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        {label}{required && <span className="text-magenta ml-0.5">*</span>}
       </label>
       <input
         type={type}

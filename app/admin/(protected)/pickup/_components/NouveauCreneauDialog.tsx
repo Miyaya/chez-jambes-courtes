@@ -35,7 +35,7 @@ export function NouveauCreneauDialog() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+            className="bg-white rounded-2xl border border-midnight/10 w-full max-w-md"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6">
@@ -52,7 +52,7 @@ export function NouveauCreneauDialog() {
               <form ref={formRef} action={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
-                    Libellé <span className="text-red-400 ml-0.5">*</span>
+                    Libellé <span className="text-magenta ml-0.5">*</span>
                   </label>
                   <input
                     type="text"
@@ -66,7 +66,7 @@ export function NouveauCreneauDialog() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
-                      Date <span className="text-red-400 ml-0.5">*</span>
+                      Date <span className="text-magenta ml-0.5">*</span>
                     </label>
                     <input
                       type="date"
@@ -77,7 +77,7 @@ export function NouveauCreneauDialog() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
-                      Heure <span className="text-red-400 ml-0.5">*</span>
+                      Heure <span className="text-magenta ml-0.5">*</span>
                     </label>
                     <input
                       type="time"
@@ -107,7 +107,7 @@ export function NouveauCreneauDialog() {
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" name="active" defaultChecked className="sr-only peer" />
                     <div className="w-11 h-6 rounded-full bg-midnight/20 peer-checked:bg-midnight transition-colors duration-200" />
-                    <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-5" />
+                    <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
                   </label>
                 </div>
 

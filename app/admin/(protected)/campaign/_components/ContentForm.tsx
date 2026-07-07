@@ -62,7 +62,7 @@ export function ContentForm({
           toastVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
         }`}
       >
-        <div className="bg-green-400 text-green-950 text-base font-bold px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
+        <div className="bg-midnight text-yellow text-base font-bold px-6 py-4 rounded-2xl flex items-center gap-3">
           <span className="text-2xl leading-none">✓</span>
           Contenu mis à jour
         </div>

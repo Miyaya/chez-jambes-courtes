@@ -1,6 +1,6 @@
 import { requireAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { CommandesTable, type Order } from './_components/CommandesTable'
+import { CommandesTable, type Order, type Product } from './_components/CommandesTable'
 
 export const metadata = { title: 'Commandes — Admin' }
 
@@ -9,15 +9,19 @@ export default async function CommandesAdminPage() {
 
   const supabase = createAdminClient()
 
-  const [{ data: orders }, { data: allEmails }] = await Promise.all([
+  const [{ data: orders }, { data: allEmails }, { data: products }] = await Promise.all([
     supabase
       .from('orders')
-      .select('id, order_number, customer_prenom, customer_nom, customer_email, customer_phone, status, flag, subtotal, discount_amount, total_amount, created_at, tracking_token, note, items, payment_method, pickup_slots(label, location)')
+      .select('id, order_number, customer_prenom, customer_nom, customer_email, customer_phone, status, flag, subtotal, discount_amount, total_amount, created_at, tracking_token, note, cancel_reason, items, payment_method, pickup_slots(label, location)')
       .order('created_at', { ascending: false })
       .limit(100),
     supabase
       .from('orders')
       .select('customer_email'),
+    supabase
+      .from('products')
+      .select('id, name_fr, name_tw, unit_label, unit_price, preference_options')
+      .order('name_fr'),
   ])
 
   const emailCount: Record<string, number> = {}
@@ -40,6 +44,7 @@ export default async function CommandesAdminPage() {
       <CommandesTable
         orders={(orders ?? []) as unknown as Order[]}
         firstTimeEmails={firstTimeEmails}
+        products={(products ?? []) as unknown as Product[]}
       />
     </div>
   )

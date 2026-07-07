@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendOrderConfirmationEmail } from '@/lib/email'
+import { sendPreorderReceivedEmail, sendReadyForPickupEmail } from '@/lib/email'
 
 type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
 type CartItem = { id: string; qty: number; preference?: string }
@@ -64,6 +64,9 @@ export async function POST(request: Request) {
   const now = new Date()
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
   const itemsSnapshot: ItemSnapshot[] = []
+  // stock_quantity = 0 means pre-order (no stock cap); > 0 means in-stock with a hard limit.
+  // Carts never mix the two, so any pre-order item makes the whole order a pre-order.
+  let isPreorder = false
 
   for (const cartItem of cartItems) {
     const product = dbProducts.find(p => p.id === cartItem.id)
@@ -82,6 +85,8 @@ export async function POST(request: Request) {
         },
         { status: 400 },
       )
+
+    if (product.stock_quantity === 0) isPreorder = true
 
     // Validate preference against the product's allowed options
     const options: string[] = Array.isArray(product.preference_options) ? product.preference_options : []
@@ -135,7 +140,7 @@ export async function POST(request: Request) {
     .insert({
       items: itemsSnapshot,
       subtotal,
-      status: 'received',
+      status: isPreorder ? 'received_preorder' : 'received_instock',
       payment_method: paymentMethod,
       pickup_slot_id: customer.pickup_slot_id || null,
       customer_prenom: customer.prenom.trim(),
@@ -166,7 +171,7 @@ export async function POST(request: Request) {
       pickupSlotLabel = slot?.label ?? null
       pickupSlotLocation = slot?.location ?? null
     }
-    sendOrderConfirmationEmail({
+    const emailData = {
       order_number: order.order_number,
       customer_prenom: customer.prenom.trim(),
       customer_nom: customer.nom.trim(),
@@ -176,7 +181,15 @@ export async function POST(request: Request) {
       tracking_token: order.tracking_token,
       pickup_slot_label: pickupSlotLabel,
       pickup_slot_location: pickupSlotLocation,
-    }).catch(err => console.error('[email] order confirmation failed:', err))
+    }
+
+    const sendPromise = isPreorder
+      ? sendPreorderReceivedEmail({ ...emailData, payment_method: paymentMethod })
+      : sendReadyForPickupEmail(emailData)
+
+    sendPromise
+      .then(() => supabase.from('orders').update({ confirmation_email_sent: true }).eq('id', order.id))
+      .catch(err => console.error('[email] order confirmation failed:', err))
 
     return NextResponse.json({ token: order.tracking_token, method: paymentMethod })
   }

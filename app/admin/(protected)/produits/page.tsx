@@ -23,7 +23,7 @@ function ToggleSwitch({ checked, label, action }: { checked: boolean; label: str
         aria-label={`${label} — ${checked ? 'Désactiver' : 'Activer'}`}
       >
         <span
-          className={`absolute top-1 left-0 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
+          className={`absolute top-1 left-0 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${
             checked ? 'translate-x-6' : 'translate-x-1'
           }`}
         />
@@ -52,7 +52,7 @@ export default async function ProduitsAdminPage() {
         <NouveauProduitDialog />
       </div>
 
-      <div className="bg-white rounded-2xl border border-midnight/8 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-midnight/8 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-midnight/8 text-left">
@@ -86,7 +86,7 @@ export default async function ProduitsAdminPage() {
                   <td className="px-4 py-3 tabular-nums">
                     <p className="font-bold text-midnight">{centsToEur(product.unit_price)} €</p>
                     {product.promo_price && (
-                      <p className="text-xs text-green-600">{centsToEur(product.promo_price)} € promo</p>
+                      <p className="text-xs text-dark-green">{centsToEur(product.promo_price)} € promo</p>
                     )}
                   </td>
                   <td className="px-4 py-3">

@@ -5,11 +5,26 @@ import { createProductAction } from '../actions'
 
 export function NouveauProduitDialog() {
   const [open, setOpen] = useState(false)
+  const [options, setOptions] = useState<string[]>([])
+  const [newOption, setNewOption] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
+
+  function addOption() {
+    const trimmed = newOption.trim()
+    if (!trimmed || options.includes(trimmed)) return
+    setOptions(o => [...o, trimmed])
+    setNewOption('')
+  }
+
+  function removeOption(index: number) {
+    setOptions(o => o.filter((_, i) => i !== index))
+  }
 
   async function handleSubmit(formData: FormData) {
     await createProductAction(formData)
     formRef.current?.reset()
+    setOptions([])
+    setNewOption('')
     setOpen(false)
   }
 
@@ -28,7 +43,7 @@ export function NouveauProduitDialog() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl border border-midnight/10 w-full max-w-md max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6">
@@ -77,15 +92,59 @@ export function NouveauProduitDialog() {
 
                 <Field label="Image URL" name="image_url" placeholder="/product_mangue.jpeg" />
 
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-xs font-bold text-midnight/50 uppercase tracking-wider">
-                    Afficher à la vente
-                  </span>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="visible_instock" defaultChecked className="sr-only peer" />
-                    <div className="w-11 h-6 rounded-full bg-midnight/20 peer-checked:bg-midnight transition-colors duration-200" />
-                    <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 peer-checked:translate-x-5" />
+                <div className="space-y-1">
+                  <ToggleField label="Afficher en flash" name="visible_flash" defaultChecked />
+                  <ToggleField label="Afficher en instock" name="visible_instock" defaultChecked />
+                  <ToggleField label="Range" name="has_price_range" />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1.5">
+                    Preference options
                   </label>
+                  {options.length > 0 && (
+                    <ul className="space-y-1.5 mb-2">
+                      {options.map((option, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between gap-2 text-sm text-midnight border border-midnight/15 rounded-lg px-3 py-1.5"
+                        >
+                          <span className="truncate">{option}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeOption(i)}
+                            className="text-midnight/30 hover:text-midnight shrink-0 leading-none"
+                            aria-label={`Retirer ${option}`}
+                          >
+                            ✕
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newOption}
+                      onChange={e => setNewOption(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          addOption()
+                        }
+                      }}
+                      placeholder="ex. Grand (≥400g)"
+                      className="flex-1 text-sm text-midnight border border-midnight/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-midnight/20 placeholder:text-midnight/25"
+                    />
+                    <button
+                      type="button"
+                      onClick={addOption}
+                      className="shrink-0 text-xs font-bold uppercase tracking-wider px-4 rounded-lg border border-midnight/20 text-midnight/60 hover:border-midnight/40 hover:text-midnight transition-colors"
+                    >
+                      Ajouter
+                    </button>
+                  </div>
+                  <input type="hidden" name="preference_options" value={JSON.stringify(options)} />
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -112,6 +171,21 @@ export function NouveauProduitDialog() {
   )
 }
 
+function ToggleField({ label, name, defaultChecked }: { label: string; name: string; defaultChecked?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <span className="text-xs font-bold text-midnight/50 uppercase tracking-wider">
+        {label}
+      </span>
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input type="checkbox" name={name} defaultChecked={defaultChecked} className="sr-only peer" />
+        <div className="w-11 h-6 rounded-full bg-midnight/20 peer-checked:bg-midnight transition-colors duration-200" />
+        <span className="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-5" />
+      </label>
+    </div>
+  )
+}
+
 function Field({
   label, name, required, placeholder, type = 'text', step, min, defaultValue,
 }: {
@@ -127,7 +201,7 @@ function Field({
   return (
     <div>
       <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
-        {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+        {label}{required && <span className="text-magenta ml-0.5">*</span>}
       </label>
       <input
         type={type}

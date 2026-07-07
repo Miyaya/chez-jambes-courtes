@@ -135,12 +135,11 @@ export default function CartPanel() {
               <p className="text-sm text-midnight/50">Sous-total</p>
               <p className="font-bold text-midnight tabular-nums">{centsToEur(subtotal)} €</p>
             </div>
-            <div className="relative group">
+            <div className="relative">
               {belowMinimum ? (
                 <button
                   type="button"
-                  disabled
-                  className="block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl text-center opacity-50 cursor-not-allowed"
+                  className="peer block w-full bg-midnight text-yellow font-bold text-sm uppercase tracking-wider py-4 rounded-xl text-center opacity-50 cursor-not-allowed"
                 >
                   Confirmer · 前往結帳 →
                 </button>
@@ -155,7 +154,7 @@ export default function CartPanel() {
               )}
 
               {belowMinimum && (
-                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
+                <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-midnight text-white text-xs rounded-xl whitespace-nowrap opacity-0 peer-hover:opacity-100 peer-focus:opacity-100 peer-active:opacity-100 transition-opacity duration-150 text-center leading-relaxed z-10">
                   必須訂至少兩顆水果
                   <br />
                   <span className="text-white/60 text-[10px]">Il faut commander au moins 2 fruits</span>

@@ -29,7 +29,7 @@ export default async function AchatsAdminPage() {
         <NouvelAchatDialog />
       </div>
 
-      <div className="bg-white rounded-2xl border border-midnight/8 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-midnight/8 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-midnight/8 text-left">
@@ -65,7 +65,7 @@ export default async function AchatsAdminPage() {
                         'use server'
                         await deletePurchaseTripAction(trip.id)
                       }}
-                      className="text-xs text-midnight/30 hover:text-red-500 transition-colors px-2 py-1"
+                      className="text-xs text-midnight/30 hover:text-magenta transition-colors px-2 py-1"
                       aria-label="Supprimer"
                     >
                       Supprimer
