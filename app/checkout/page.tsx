@@ -187,7 +187,7 @@ function OrderSummaryBox({
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { cart, products } = useCart()
+  const { cart, products, clearCart } = useCart()
 
   const [slots, setSlots] = useState<PickupSlot[]>([])
   const [firstName, setFirstName] = useState('')
@@ -322,6 +322,7 @@ export default function CheckoutPage() {
         setError(data.error ?? 'Une erreur est survenue.')
         return
       }
+      clearCart()
       if (data.token) {
         router.push(`/merci/commande?token=${data.token}&method=${paymentMethod}`)
       } else {

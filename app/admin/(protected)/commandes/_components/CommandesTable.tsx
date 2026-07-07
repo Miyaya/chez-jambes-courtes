@@ -84,6 +84,7 @@ export function CommandesTable({
   const firstTimeSet = new Set(firstTimeEmails)
   const [toastMsg, setToastMsg] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
+  const [toastError, setToastError] = useState(false)
   const [openOrderId, setOpenOrderId] = useState<string | null>(null)
   const [draftStatus, setDraftStatus] = useState<OrderStatus | null>(null)
   const [draftCancelReason, setDraftCancelReason] = useState('')
@@ -107,8 +108,9 @@ export function CommandesTable({
       })
   )
 
-  function showToast(msg: string) {
+  function showToast(msg: string, isError = false) {
     setToastMsg(msg)
+    setToastError(isError)
     setToastVisible(true)
     setTimeout(() => setToastVisible(false), 2500)
   }
@@ -120,7 +122,7 @@ export function CommandesTable({
       else await voidStripePaymentAction(orderId)
       showToast(action === 'capture' ? 'Paiement capturé ✓' : 'Autorisation annulée ✓')
     } catch {
-      showToast('Erreur Stripe — vérifiez le dashboard')
+      showToast('Erreur Stripe — vérifiez le dashboard', true)
     } finally {
       setStripeLoading(prev => { const n = { ...prev }; delete n[orderId]; return n })
     }
@@ -225,6 +227,8 @@ export function CommandesTable({
         }
         showToast(statusChanged ? 'Enregistré · e-mail envoyé' : 'Enregistré')
         closeEditDialog()
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : 'Erreur — la commande n\'a pas été modifiée', true)
       } finally {
         setSaving(false)
       }
@@ -595,8 +599,10 @@ export function CommandesTable({
           toastVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3 pointer-events-none'
         }`}
       >
-        <div className="bg-midnight text-yellow text-base font-bold px-6 py-4 rounded-2xl flex items-center gap-3">
-          <span className="text-2xl leading-none">✓</span>
+        <div className={`text-base font-bold px-6 py-4 rounded-2xl flex items-center gap-3 ${
+          toastError ? 'bg-magenta text-white' : 'bg-midnight text-yellow'
+        }`}>
+          <span className="text-2xl leading-none">{toastError ? '✕' : '✓'}</span>
           {toastMsg}
         </div>
       </div>

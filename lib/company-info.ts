@@ -2,7 +2,7 @@
 // Kept out of public pages (mentions-légales only shows the postal code/city);
 // the full address is disclosed here for documents sent directly to customers.
 export const COMPANY_INFO = {
-  legalName: 'Yi-Hsuan LECLERE',
+  legalName: 'Yi-Hsuan LEE',
   tradeName: 'CHEZ JAMBES COURTES',
   legalForm: 'Entrepreneur Individuel (EI)',
   siren: '106 846 538',

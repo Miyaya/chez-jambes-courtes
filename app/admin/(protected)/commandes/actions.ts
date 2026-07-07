@@ -19,19 +19,51 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
   await requireAdmin()
   const supabase = createAdminClient()
 
-  await supabase
+  const { data: order } = await supabase
     .from('orders')
-    .update(status === 'canceled' ? { status, cancel_reason: cancelReason ?? null } : { status })
+    .select('order_number, customer_prenom, customer_nom, customer_email, items, subtotal, total_amount, payment_method, stripe_session_id, tracking_token, pickup_slots(label, location)')
     .eq('id', orderId)
+    .single()
+
+  // Preorder Stripe payments are pre-authorized only (capture_method: manual) —
+  // validating the order is what actually charges the customer. Capture happens
+  // before the status write so a Stripe failure blocks the status change instead
+  // of silently leaving an order marked "validated" with money never collected.
+  if ((status === 'validated' || status === 'partial_validated') && order?.payment_method === 'stripe' && order.stripe_session_id) {
+    const stripe = getStripe()
+    const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id)
+    const paymentIntentId = typeof session.payment_intent === 'string'
+      ? session.payment_intent
+      : session.payment_intent?.id
+    if (paymentIntentId) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+      if (paymentIntent.status === 'requires_capture') {
+        await stripe.paymentIntents.capture(paymentIntentId, { amount_to_capture: order.total_amount })
+      }
+    }
+  }
+
+  // Conditional filter doubles as an idempotency lock: only restores stock the first
+  // time an order is canceled (a webhook expiry and an admin cancel can't double-restore).
+  const { data: canceled } = status === 'canceled'
+    ? await supabase
+        .from('orders')
+        .update({ status, cancel_reason: cancelReason ?? null })
+        .eq('id', orderId)
+        .neq('status', 'canceled')
+        .select('id')
+        .single()
+    : { data: null }
+
+  if (status !== 'canceled') {
+    await supabase.from('orders').update({ status }).eq('id', orderId)
+  } else if (canceled) {
+    const { error } = await supabase.rpc('restore_stock_for_order', { p_order_id: orderId })
+    if (error) console.error('[order] restore_stock_for_order failed:', error)
+  }
   revalidatePath('/admin/commandes')
 
   if (status !== 'validated' && status !== 'partial_validated' && status !== 'complete' && status !== 'canceled') return
-
-  const { data: order } = await supabase
-    .from('orders')
-    .select('order_number, customer_prenom, customer_nom, customer_email, items, subtotal, tracking_token, pickup_slots(label, location)')
-    .eq('id', orderId)
-    .single()
   if (!order) return
 
   // @ts-expect-error — Supabase nested select returns object not array

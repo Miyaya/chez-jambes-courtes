@@ -26,6 +26,7 @@ type ItemSnapshot = {
   qty: number
   line_total: number
   preference: string | null
+  capped: boolean
 }
 
 export async function POST(request: Request) {
@@ -129,31 +130,48 @@ export async function POST(request: Request) {
       qty: cartItem.qty,
       line_total: effectivePrice * cartItem.qty,
       preference,
+      capped: product.stock_quantity > 0,
     })
   }
 
   const subtotal = itemsSnapshot.reduce((sum, i) => sum + i.line_total, 0)
   const paymentMethod: PaymentMethod = customer.payment_method ?? 'stripe'
 
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      items: itemsSnapshot,
-      subtotal,
-      status: isPreorder ? 'received_preorder' : 'received_instock',
-      payment_method: paymentMethod,
-      pickup_slot_id: customer.pickup_slot_id || null,
-      customer_prenom: customer.prenom.trim(),
-      customer_nom: customer.nom.trim(),
-      customer_email: customer.email.trim().toLowerCase(),
-      customer_phone: customer.phone?.trim() || null,
-      line_username: customer.line_username?.trim() || null,
-      note: customer.note?.trim() || null,
+  // create_order_with_stock reserves stock (row-locked, per product) and inserts the
+  // order in one transaction — the earlier stock_quantity check above is only an
+  // optimistic pre-check for a fast error message; this call is the actual gate that
+  // prevents two concurrent checkouts from both winning the last unit.
+  const { data: rpcData, error: orderError } = await supabase
+    .rpc('create_order_with_stock', {
+      p_items: itemsSnapshot,
+      p_subtotal: subtotal,
+      p_status: isPreorder ? 'received_preorder' : 'received_instock',
+      p_payment_method: paymentMethod,
+      p_pickup_slot_id: customer.pickup_slot_id || null,
+      p_customer_prenom: customer.prenom.trim(),
+      p_customer_nom: customer.nom.trim(),
+      p_customer_email: customer.email.trim().toLowerCase(),
+      p_customer_phone: customer.phone?.trim() || null,
+      p_line_username: customer.line_username?.trim() || null,
+      p_note: customer.note?.trim() || null,
     })
-    .select('id, order_number, tracking_token')
     .single()
 
+  const order = rpcData as { id: string; order_number: string; tracking_token: string } | null
+
   if (orderError || !order) {
+    const match = orderError?.message.match(/insufficient_stock:([0-9a-f-]+)/i)
+    if (match) {
+      const product = dbProducts.find(p => p.id === match[1])
+      return NextResponse.json(
+        {
+          error: product
+            ? `Stock insuffisant pour ${product.name_fr} · ${product.name_tw} 庫存不足（剩 ${product.stock_quantity} ${product.unit_label}）`
+            : 'Stock insuffisant · 庫存不足',
+        },
+        { status: 409 },
+      )
+    }
     console.error('[checkout] order insert error:', orderError)
     return NextResponse.json({ error: 'Erreur lors de la création de la commande' }, { status: 500 })
   }
@@ -208,14 +226,25 @@ export async function POST(request: Request) {
       metadata: { order_id: order.id },
       payment_intent_data: {
         description: 'Chez Jambes Courtes',
-        capture_method: 'manual',
+        // Preorder (flash) items aren't sourced yet — only pre-authorize, and
+        // capture later once the order is validated (see commandes/actions.ts).
+        // In-stock items ship immediately, so they're charged immediately too.
+        capture_method: isPreorder ? 'manual' : 'automatic',
       },
       locale: 'fr',
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/merci/commande?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/`,
+      // Stock is reserved the moment this order was created (create_order_with_stock
+      // above) — 30 minutes is Stripe's minimum allowed expiry, so an abandoned
+      // in-stock cart holds reserved stock hostage for as short a window as possible.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
     })
   } catch (stripeErr) {
     console.error('[checkout] stripe error:', stripeErr)
+    // Restore stock before deleting — restore_stock_for_order reads the item
+    // snapshot off the order row, so it must run while the row still exists.
+    const { error: restoreError } = await supabase.rpc('restore_stock_for_order', { p_order_id: order.id })
+    if (restoreError) console.error('[checkout] restore_stock_for_order failed:', restoreError)
     await supabase.from('orders').delete().eq('id', order.id)
     return NextResponse.json({ error: 'Erreur de paiement · 付款服務發生錯誤' }, { status: 500 })
   }
