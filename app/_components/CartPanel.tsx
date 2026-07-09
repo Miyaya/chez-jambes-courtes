@@ -37,8 +37,8 @@ export default function CartPanel() {
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
   const belowMinimum = subtotal < MIN_ORDER_CENTS
 
-  const instockItems = items.filter(([id]) => products[id]?.stock_quantity != null)
-  const preorderItems = items.filter(([id]) => products[id]?.stock_quantity == null)
+  const instockItems = items.filter(([id]) => products[id]?.channel === 'instock')
+  const preorderItems = items.filter(([id]) => products[id]?.channel === 'flash')
   const hasBoth = instockItems.length > 0 && preorderItems.length > 0
 
   function renderCartItem(id: string, qty: number) {

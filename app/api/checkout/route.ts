@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendPreorderReceivedEmail, sendReadyForPickupEmail } from '@/lib/email'
+import { sendPreorderReceivedEmail, sendInstockOrderReceivedEmail } from '@/lib/email'
 
 type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
+type Channel = 'instock' | 'flash'
 type CartItem = { id: string; qty: number; preference?: string }
 type Customer = {
   nom: string
@@ -33,10 +34,21 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null)
   if (!body) return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
-  const { cartItems, customer }: { cartItems: CartItem[]; customer: Customer } = body
+  const { cartItems, customer, channel, partialAllowed }: {
+    cartItems: CartItem[]
+    customer: Customer
+    channel: Channel
+    partialAllowed?: boolean
+  } = body
 
   if (!Array.isArray(cartItems) || cartItems.length === 0)
     return NextResponse.json({ error: 'Panier vide · 購物車是空的' }, { status: 400 })
+
+  if (channel !== 'instock' && channel !== 'flash')
+    return NextResponse.json({ error: 'Requête invalide' }, { status: 400 })
+
+  if (channel === 'flash' && typeof partialAllowed !== 'boolean')
+    return NextResponse.json({ error: 'Veuillez choisir une option en cas de rupture · 請選擇缺貨時的處理方式' }, { status: 400 })
 
   for (const item of cartItems) {
     if (!item.id || !Number.isInteger(item.qty) || item.qty <= 0)
@@ -51,7 +63,7 @@ export async function POST(request: Request) {
   // Fetch server-authoritative prices and stock — never trust client amounts
   const { data: dbProducts, error: dbError } = await supabase
     .from('products')
-    .select('id, name_fr, name_tw, unit_price, promo_price, promo_until, unit_label, visible_instock, stock_quantity, preference_options')
+    .select('id, name_fr, name_tw, unit_price, promo_price, promo_until, unit_label, visible_instock, visible_flash, stock_quantity, preference_options')
     .in(
       'id',
       cartItems.map(i => i.id),
@@ -65,29 +77,35 @@ export async function POST(request: Request) {
   const now = new Date()
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
   const itemsSnapshot: ItemSnapshot[] = []
-  // stock_quantity = 0 means pre-order (no stock cap); > 0 means in-stock with a hard limit.
-  // Carts never mix the two, so any pre-order item makes the whole order a pre-order.
-  let isPreorder = false
+  // The channel the whole cart checks out through decides the rules — never the
+  // raw stock_quantity value. Carts never mix channels (each product page only
+  // adds items tagged with its own channel; checkout/page.tsx derives one channel
+  // for the whole order and the client can't add items from two pages at once).
+  const isPreorder = channel === 'flash'
 
   for (const cartItem of cartItems) {
     const product = dbProducts.find(p => p.id === cartItem.id)
     if (!product)
       return NextResponse.json({ error: 'Produit introuvable · 找不到商品' }, { status: 400 })
-    if (!product.visible_instock)
+
+    const visibleOnChannel = channel === 'instock' ? product.visible_instock : product.visible_flash
+    if (!visibleOnChannel)
       return NextResponse.json(
         { error: `${product.name_fr} n'est plus disponible · 商品已下架` },
         { status: 400 },
       )
-    // stock_quantity = 0 means pre-order (no stock cap); > 0 means in-stock with a hard limit
-    if (product.stock_quantity > 0 && cartItem.qty > product.stock_quantity)
+
+    // Instock checkout: always capped by real stock, even at 0 (sold out).
+    // Flash/preorder checkout: never capped — the raw stock_quantity value on a
+    // flash-only product (e.g. left over from before it was flash-only) doesn't
+    // apply here, sourcing happens later at the market.
+    if (channel === 'instock' && cartItem.qty > product.stock_quantity)
       return NextResponse.json(
         {
-          error: `Stock insuffisant pour ${product.name_fr} · ${product.name_tw} 庫存不足（剩 ${product.stock_quantity} ${product.unit_label}）`,
+          error: `Stock insuffisant pour ${product.name_fr} · ${product.name_tw} 庫存不足（剩 ${product.stock_quantity} ${product.unit_label} ）請回到上一頁調整數量`,
         },
         { status: 400 },
       )
-
-    if (product.stock_quantity === 0) isPreorder = true
 
     // Validate preference against the product's allowed options
     const options: string[] = Array.isArray(product.preference_options) ? product.preference_options : []
@@ -130,7 +148,7 @@ export async function POST(request: Request) {
       qty: cartItem.qty,
       line_total: effectivePrice * cartItem.qty,
       preference,
-      capped: product.stock_quantity > 0,
+      capped: channel === 'instock',
     })
   }
 
@@ -154,6 +172,7 @@ export async function POST(request: Request) {
       p_customer_phone: customer.phone?.trim() || null,
       p_line_username: customer.line_username?.trim() || null,
       p_note: customer.note?.trim() || null,
+      p_partial_allowed: channel === 'flash' ? partialAllowed : null,
     })
     .single()
 
@@ -203,7 +222,7 @@ export async function POST(request: Request) {
 
     const sendPromise = isPreorder
       ? sendPreorderReceivedEmail({ ...emailData, payment_method: paymentMethod })
-      : sendReadyForPickupEmail(emailData)
+      : sendInstockOrderReceivedEmail(emailData)
 
     sendPromise
       .then(() => supabase.from('orders').update({ confirmation_email_sent: true }).eq('id', order.id))

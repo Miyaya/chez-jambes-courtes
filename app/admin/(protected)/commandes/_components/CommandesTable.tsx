@@ -74,14 +74,14 @@ function centsToEur(cents: number) {
 
 export function CommandesTable({
   orders,
-  firstTimeEmails,
+  newEmails,
   products,
 }: {
   orders: Order[]
-  firstTimeEmails: string[]
+  newEmails: string[]
   products: Product[]
 }) {
-  const firstTimeSet = new Set(firstTimeEmails)
+  const newEmailSet = new Set(newEmails)
   const [toastMsg, setToastMsg] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
   const [toastError, setToastError] = useState(false)
@@ -264,7 +264,7 @@ export function CommandesTable({
             )}
             {optimisticOrders.map(order => {
               const s = STATUS[order.status] ?? STATUS.received_preorder
-              const isNew = firstTimeSet.has(order.customer_email)
+              const isNew = newEmailSet.has(order.customer_email)
 
               return (
                 <tr key={order.id} className="hover:bg-midnight/2 transition-colors">

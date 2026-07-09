@@ -5,6 +5,7 @@ import Nav from "./_components/Nav";
 import CartPanel from "./_components/CartPanel";
 import { CartProvider } from "./_components/CartProvider";
 import PurchaseBanner from "./_components/PurchaseBanner";
+import { getActiveChannel } from "@/lib/siteConfig";
 
 const chironGoRoundTC = Chiron_GoRound_TC({
   variable: "--font-chiron",
@@ -20,14 +21,16 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Chez Jambes Courtes",
-  description: "巴黎也買得到台灣ㄉ鮮果！",
+  description: "巴黎的台灣鮮果店",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const activeChannel = await getActiveChannel();
+
   return (
     <html
       lang="en"
@@ -36,7 +39,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <CartProvider>
           <div className="sticky top-0 z-50">
-            <Nav />
+            <Nav activeChannel={activeChannel} />
             <PurchaseBanner />
           </div>
           <CartPanel />

@@ -1,3 +1,5 @@
+import { readFile } from 'fs/promises'
+import path from 'path'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 import { COMPANY_INFO } from './company-info'
 
@@ -21,6 +23,7 @@ export type InvoiceOrder = {
   discount_amount: number
   total_amount: number
   payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
+  pickup_slots?: { slot_at: string; location: string | null } | null
 }
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -62,6 +65,17 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<Uint8Arra
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
+  const logoBytes = await readFile(path.join(process.cwd(), 'public', 'logo.png'))
+  const logoImage = await pdfDoc.embedPng(logoBytes)
+  const logoHeight = 40
+  const logoWidth = (logoImage.width / logoImage.height) * logoHeight
+  page.drawImage(logoImage, {
+    x: MARGIN,
+    y: PAGE_HEIGHT - MARGIN - logoHeight + 10,
+    width: logoWidth,
+    height: logoHeight,
+  })
+
   const ink = rgb(0.10, 0.08, 0.07) // midnight
   const muted = rgb(0.45, 0.42, 0.40)
 
@@ -97,7 +111,8 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<Uint8Arra
     targetPage.drawText(cleaned, { x: rightX - width, y: lineY, size, font: f, color: opts.color ?? ink })
   }
 
-  // Header — seller identity
+  // Header — seller identity (below logo)
+  y -= logoHeight + 20
   text(COMPANY_INFO.tradeName, MARGIN, y, { size: 16, f: bold })
   y -= 18
   text(`${COMPANY_INFO.legalName} — ${COMPANY_INFO.legalForm}`, MARGIN, y, { size: 9, color: muted })
@@ -110,17 +125,31 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<Uint8Arra
 
   // Header — invoice meta (right-aligned)
   let metaY = PAGE_HEIGHT - MARGIN
-  rightAlignedText(page, 'FACTURE', PAGE_WIDTH - MARGIN, metaY, { size: 16, f: bold })
+  rightAlignedText(page, 'FACTURE ACQUITTÉE', PAGE_WIDTH - MARGIN, metaY, { size: 16, f: bold })
   metaY -= 18
   rightAlignedText(page, `N° ${order.order_number}`, PAGE_WIDTH - MARGIN, metaY, { size: 9, color: muted })
   metaY -= 12
   rightAlignedText(
     page,
-    new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+    `Éditée le ${new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`,
     PAGE_WIDTH - MARGIN,
     metaY,
     { size: 9, color: muted },
   )
+  metaY -= 12
+  if (order.pickup_slots?.slot_at) {
+    const deliveryDate = new Date(order.pickup_slots.slot_at).toLocaleString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    rightAlignedText(page, `Date de livraison : ${deliveryDate}`, PAGE_WIDTH - MARGIN, metaY, {
+      size: 9,
+      color: muted,
+    })
+  }
 
   y -= 36
   page.drawLine({

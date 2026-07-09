@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from './CartProvider'
 import Footer from './Footer'
+import { createClient } from '@/lib/supabase/browser'
 
 export type PublicProduct = {
   id: string
@@ -21,6 +22,8 @@ export type PublicProduct = {
   stock_quantity?: number | null  // only present for instock products
   created_at: string
 }
+
+export type Channel = 'instock' | 'flash'
 
 type Hero = {
   zh: string
@@ -85,7 +88,7 @@ function flyToCartIcon(sourceEl: HTMLElement) {
 
 // ── Product card ──
 
-function ProductCard({ product }: { product: PublicProduct }) {
+function ProductCard({ product, channel }: { product: PublicProduct; channel: Channel }) {
   const [qty, setQty] = useState(1)
   const { addToCart, cart } = useCart()
   const addBtnRef = useRef<HTMLButtonElement>(null)
@@ -95,7 +98,7 @@ function ProductCard({ product }: { product: PublicProduct }) {
     : Infinity
 
   const handleAdd = () => {
-    addToCart(product.id, qty, product)
+    addToCart(product.id, qty, { ...product, channel })
     if (addBtnRef.current) flyToCartIcon(addBtnRef.current)
     setQty(1)
   }
@@ -181,7 +184,36 @@ function ProductCard({ product }: { product: PublicProduct }) {
 
 // ── Main page component ──
 
-export default function ShopClient({ products, hero }: { products: PublicProduct[]; hero?: Hero }) {
+export default function ShopClient({ products: initialProducts, hero, channel }: { products: PublicProduct[]; hero?: Hero; channel: Channel }) {
+  const [products, setProducts] = useState(initialProducts)
+
+  // Live stock counts: subscribe to the public broadcast a DB trigger sends on
+  // every stock_quantity change (see migration/07_stock_broadcast.sql). Only
+  // products that arrived with a stock_quantity (i.e. in-stock, not preorder) are
+  // tracked, so a broadcast for a preorder-only product id can't spuriously add
+  // a stock_quantity field where the product intentionally has none.
+  useEffect(() => {
+    const cappedIds = new Set(
+      initialProducts.filter(p => p.stock_quantity != null).map(p => p.id),
+    )
+    if (cappedIds.size === 0) return
+
+    const supabase = createClient()
+    const channel = supabase
+      .channel('products:stock')
+      .on('broadcast', { event: 'stock_update' }, ({ payload }) => {
+        if (!cappedIds.has(payload.id)) return
+        setProducts(prev =>
+          prev.map(p => (p.id === payload.id ? { ...p, stock_quantity: payload.stock_quantity } : p)),
+        )
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [initialProducts])
+
   return (
     <main className="min-h-screen bg-white flex flex-col">
       {/* Alert */}
@@ -210,7 +242,7 @@ export default function ShopClient({ products, hero }: { products: PublicProduct
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {products.map(p => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} channel={channel} />
               ))}
             </div>
           )}

@@ -11,7 +11,7 @@ export default async function ClientsAdminPage() {
 
   const { data: customers } = await supabase
     .from('customers')
-    .select('id, nom, prenom, email, phone, created_at, auth_user_id, subscriber_id, subscribers(active)')
+    .select('id, nom, prenom, email, phone, created_at, auth_user_id, subscriber_id, has_complete_order, subscribers(active)')
     .order('created_at', { ascending: false })
     .limit(200)
 
@@ -52,7 +52,14 @@ export default async function ClientsAdminPage() {
             {(customers ?? []).map(customer => (
               <tr key={customer.id} className="hover:bg-midnight/2 transition-colors">
                 <td className="px-4 py-3">
-                  <p className="font-bold text-midnight mb-0.5">{customer.prenom} {customer.nom}</p>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    {!customer.has_complete_order && (
+                      <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider bg-yellow text-midnight px-1.5 py-0.5 rounded-full leading-none">
+                        New
+                      </span>
+                    )}
+                    <p className="font-bold text-midnight">{customer.prenom} {customer.nom}</p>
+                  </div>
                   <p className="text-xs text-midnight/40">{customer.email}</p>
                   {customer.phone && (
                     <p className="text-xs text-midnight/40">{customer.phone}</p>

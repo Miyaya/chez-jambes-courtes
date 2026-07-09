@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendPreorderReceivedEmail, sendReadyForPickupEmail } from '@/lib/email'
+import { sendPreorderReceivedEmail, sendInstockOrderReceivedEmail } from '@/lib/email'
 import { BANK_INFO } from '@/lib/bank-info'
 import Footer from '@/app/_components/Footer'
 
@@ -281,7 +281,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         customer_prenom: order.customer_prenom,
         customer_nom: order.customer_nom,
         customer_email: order.customer_email,
-        items: items as { name_fr: string; name_tw: string; unit_label: string; qty: number; line_total: number; preference?: string | null }[],
+        items: items as { name_fr: string; name_tw: string; unit_label: string; unit_price: number; qty: number; line_total: number; preference?: string | null }[],
         subtotal: order.subtotal,
         tracking_token: order.tracking_token,
         pickup_slot_label: slot?.label ?? null,
@@ -291,7 +291,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
       // Stripe orders are always paid by card, never virement — no bank info needed.
       const sendPromise = order.status === 'received_preorder'
         ? sendPreorderReceivedEmail({ ...emailData, payment_method: 'stripe' })
-        : sendReadyForPickupEmail(emailData)
+        : sendInstockOrderReceivedEmail(emailData)
 
       await sendPromise.catch(err => console.error('[email] order confirmation failed:', err))
     }

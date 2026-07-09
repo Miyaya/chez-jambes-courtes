@@ -14,7 +14,7 @@ export async function GET(
 
   const { data: order, error } = await supabase
     .from('orders')
-    .select('order_number, customer_prenom, customer_nom, customer_email, customer_phone, created_at, items, subtotal, discount_amount, total_amount, payment_method, status')
+    .select('order_number, customer_prenom, customer_nom, customer_email, customer_phone, created_at, items, subtotal, discount_amount, total_amount, payment_method, status, pickup_slots(slot_at, location)')
     .eq('id', orderId)
     .single()
 
@@ -26,7 +26,9 @@ export async function GET(
     return NextResponse.json({ error: 'La facture est disponible uniquement pour les commandes terminées' }, { status: 400 })
   }
 
-  const pdfBytes = await generateInvoicePdf(order)
+  const pickupSlot = Array.isArray(order.pickup_slots) ? order.pickup_slots[0] ?? null : order.pickup_slots
+
+  const pdfBytes = await generateInvoicePdf({ ...order, pickup_slots: pickupSlot })
 
   return new Response(new Uint8Array(pdfBytes), {
     headers: {

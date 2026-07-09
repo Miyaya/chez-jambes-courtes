@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 import { buildUnsubscribeUrl } from '@/lib/unsubscribe-token'
 import { BANK_INFO } from '@/lib/bank-info'
+import { generateInvoicePdf } from '@/lib/invoice'
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY)
@@ -10,6 +11,7 @@ type OrderItem = {
   name_fr: string
   name_tw: string
   unit_label: string
+  unit_price: number
   qty: number
   line_total: number
   preference?: string | null
@@ -176,16 +178,27 @@ async function sendBrandEmail(
   to: string,
   subject: string,
   bodyHtml: string,
-  opts: { accent?: keyof typeof ACCENT; headers?: Record<string, string> } = {},
+  opts: {
+    accent?: keyof typeof ACCENT
+    headers?: Record<string, string>
+    bcc?: string
+    attachments?: { filename: string; content: Buffer }[]
+  } = {},
 ) {
   await getResend().emails.send({
     from: process.env.RESEND_FROM ?? 'Chez Jambes Courtes <onboarding@resend.dev>',
     to,
+    bcc: opts.bcc,
     subject,
     headers: opts.headers,
     html: renderEmailShell(bodyHtml, opts.accent),
+    attachments: opts.attachments,
   })
 }
+
+// sendInstockOrderReceivedEmail, sendPreorderReceivedEmail and sendOrderCompleteEmail
+// are BCC'd here so the owner has a running inbox record of order activity.
+const ORDER_BCC = 'chezjambescourtes@gmail.com'
 
 // New pre-order (flash) order: procurement isn't confirmed yet — a second email
 // follows once the trip to the market confirms what was actually bought.
@@ -219,12 +232,48 @@ export async function sendPreorderReceivedEmail(
     order.customer_email,
     `Commande reçue ${order.order_number} · 訂單已收到（尚未完成）`,
     bodyHtml,
+    { bcc: ORDER_BCC },
   )
 }
 
-// Sent both when an in-stock order comes in (goods already secured, nothing to
-// procure) and when a pre-order/flash order gets validated or partially
-// validated after the market trip — same message, same next action either way.
+// New in-stock order: goods are already secured (nothing to procure), so this
+// is both the "we received your order" confirmation and the pickup info in one
+// email — unlike sendPreorderReceivedEmail, there's no second email later since
+// nothing is pending.
+export async function sendInstockOrderReceivedEmail(order: OrderEmailData) {
+  const bodyHtml = `
+              <p style="margin:0 0 6px;font-size:24px;color:#1A1512;line-height:1.3;">
+                Merci ${order.customer_prenom} 🍊
+              </p>
+              <p style="margin:0 0 4px;font-size:13px;color:rgba(26,21,18,0.5);">
+                我們已收到您的訂單，${order.customer_prenom}！
+              </p>
+              <p style="margin:0 0 28px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,21,18,0.35);">
+                ${order.order_number}
+              </p>
+
+              <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
+
+              <p style="margin:0 0 4px;font-size:14px;color:#1A1512;line-height:1.7;">
+                商品已備妥，請在約定好的時間地點面交，請不要忘記來，一人公司謝謝配合 🙏
+              </p>
+              <p style="margin:0 0 20px;font-size:12px;color:rgba(26,21,18,0.75);line-height:1.7;">
+                Nous avons bien reçu votre commande. Vos produits sont prêts — merci de venir au créneau et au lieu convenus.
+              </p>
+
+              ${buildOrderSummaryTable(order, buildPickupBlock(order.pickup_slot_label, order.pickup_slot_location))}
+              ${buildTrackingCta(trackingUrlFor(order.tracking_token))}`
+
+  await sendBrandEmail(
+    order.customer_email,
+    `Commande reçue ${order.order_number} · 訂單已收到`,
+    bodyHtml,
+    { bcc: ORDER_BCC },
+  )
+}
+
+// Sent when a pre-order/flash order gets validated or partially validated
+// after the market trip.
 export async function sendReadyForPickupEmail(order: OrderEmailData) {
   const bodyHtml = `
               <p style="margin:0 0 6px;font-size:24px;color:#1A1512;line-height:1.3;">
@@ -253,7 +302,16 @@ export async function sendReadyForPickupEmail(order: OrderEmailData) {
   )
 }
 
-export async function sendOrderCompleteEmail(order: OrderEmailData) {
+export async function sendOrderCompleteEmail(
+  order: OrderEmailData & {
+    customer_phone: string | null
+    discount_amount: number
+    total_amount: number
+    payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
+    created_at: string
+    pickup_slot_at?: string | null
+  },
+) {
   const bodyHtml = `
               <p style="margin:0 0 6px;font-size:24px;color:#1A1512;line-height:1.3;">
                 感謝購買 🥭
@@ -269,10 +327,31 @@ export async function sendOrderCompleteEmail(order: OrderEmailData) {
 
               ${buildOrderSummaryTable(order)}`
 
+  const invoicePdf = await generateInvoicePdf({
+    order_number: order.order_number,
+    customer_prenom: order.customer_prenom,
+    customer_nom: order.customer_nom,
+    customer_email: order.customer_email,
+    customer_phone: order.customer_phone,
+    created_at: order.created_at,
+    items: order.items,
+    subtotal: order.subtotal,
+    discount_amount: order.discount_amount,
+    total_amount: order.total_amount,
+    payment_method: order.payment_method,
+    pickup_slots: order.pickup_slot_at
+      ? { slot_at: order.pickup_slot_at, location: order.pickup_slot_location ?? null }
+      : null,
+  })
+
   await sendBrandEmail(
     order.customer_email,
     `Commande terminée ${order.order_number} · 感謝購買`,
     bodyHtml,
+    {
+      bcc: ORDER_BCC,
+      attachments: [{ filename: `facture-acquittee-${order.order_number}.pdf`, content: Buffer.from(invoicePdf) }],
+    },
   )
 }
 

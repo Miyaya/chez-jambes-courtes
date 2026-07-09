@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { useCart } from './CartProvider'
@@ -26,12 +27,24 @@ function BurgerIcon() {
   )
 }
 
-export default function Nav() {
+type ActiveChannel = 'flash' | 'instock' | null
+
+export default function Nav({ activeChannel }: { activeChannel: ActiveChannel }) {
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [burgerOpen, setBurgerOpen] = useState(false)
   const burgerRef = useRef<HTMLDivElement>(null)
   const { cartTotal, openCart } = useCart()
+
+  // On /flash or /instock, the pill should reflect the page you're actually on —
+  // not the globally active channel, which defaults to Flash when both are open
+  // and would otherwise mislabel the button while browsing /instock.
+  const displayChannel: ActiveChannel = pathname.startsWith('/flash')
+    ? 'flash'
+    : pathname.startsWith('/instock')
+    ? 'instock'
+    : activeChannel
 
   useEffect(() => {
     const supabase = createClient()
@@ -72,17 +85,19 @@ export default function Nav() {
         </Link>
 
         <div className="flex items-center gap-3 justify-end md:justify-start w-full md:w-auto">
-          {/* Flash */}
-          <Link
-            href="/flash"
-            className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 ${
-              scrolled
-                ? 'border-white text-white hover:bg-white hover:text-dark-green'
-                : 'border-midnight text-midnight hover:bg-midnight hover:text-green'
-            }`}
-          >
-            Flash
-          </Link>
+          {/* Flash / Instock */}
+          {displayChannel && (
+            <Link
+              href={displayChannel === 'flash' ? '/flash' : '/instock'}
+              className={`text-sm font-bold tracking-[0.1em] px-4 py-1.5 rounded-full border-2 transition-colors duration-300 ${
+                scrolled
+                  ? 'border-white text-white hover:bg-white hover:text-dark-green'
+                  : 'border-midnight text-midnight hover:bg-midnight hover:text-green'
+              }`}
+            >
+              {displayChannel === 'flash' ? '快閃 · Flash' : '現貨 · En stock'}
+            </Link>
+          )}
 
           {/* Cart */}
           <button

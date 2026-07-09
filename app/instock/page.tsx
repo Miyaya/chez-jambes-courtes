@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
+import { getSiteConfig } from '@/lib/siteConfig'
 import ShopClient from '@/app/_components/ShopClient'
 import type { PublicProduct } from '@/app/_components/ShopClient'
 
@@ -8,11 +10,14 @@ const hero = {
 }
 
 export default async function InstockPage() {
+  const { display_instock } = await getSiteConfig()
+  if (!display_instock) redirect('/')
+
   const supabase = createServerClient()
   const { data } = await supabase
     .from('instock_products')
     .select('*')
     .order('created_at', { ascending: true })
 
-  return <ShopClient products={(data ?? []) as PublicProduct[]} hero={hero} />
+  return <ShopClient products={(data ?? []) as PublicProduct[]} hero={hero} channel="instock" />
 }

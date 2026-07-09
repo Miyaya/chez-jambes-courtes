@@ -53,7 +53,7 @@ const PAYMENT_OPTIONS: {
     label: 'Virement bancaire',
     labelZh: '銀行轉帳',
     icon: '🏦',
-    description: '銀行資訊於下方，也會以 email 寄送，請選擇即時轉帳 (instané)',
+    description: '銀行資訊於下方，也會以 email 寄送，請選擇即時轉帳 (instantané)',
   },
   {
     id: 'stripe',
@@ -67,7 +67,7 @@ const PAYMENT_OPTIONS: {
     label: 'Paiement à la livraison',
     labelZh: '面交付款',
     icon: '🤝',
-    description: '接受現金或 sans contact 的歐元信用卡',
+    description: '接受現金或 sans contact（感應式）的歐元信用卡',
   },
 ]
 
@@ -77,6 +77,13 @@ type SummaryProduct = {
   unit_price: number
   unit_label: string
   preference_options?: string[]
+  stock_quantity?: number | null
+  channel: 'instock' | 'flash'
+}
+
+const CHANNEL_LABEL: Record<'instock' | 'flash', { zh: string; fr: string }> = {
+  instock: { zh: '現貨結帳', fr: 'Commande en stock' },
+  flash: { zh: '快閃預購結帳', fr: 'Commande précommande flash' },
 }
 
 function OrderSummaryBox({
@@ -127,6 +134,7 @@ function OrderSummaryBox({
           const p = products[id]
           if (!p) return null
           const options = p.preference_options ?? []
+          const outOfSync = p.stock_quantity != null && qty > p.stock_quantity
           return (
             <div key={id}>
               <div className="flex justify-between items-start gap-2">
@@ -140,6 +148,12 @@ function OrderSummaryBox({
                   {centsToEur(p.unit_price * qty)} €
                 </p>
               </div>
+
+              {outOfSync && (
+                <p className="text-xs text-magenta mt-1.5 leading-relaxed">
+                  庫存不足以配送這個數量，請調整購物車 · Stock insuffisant pour cette quantité, veuillez ajuster votre panier
+                </p>
+              )}
 
               {options.length > 0 && (
                 <div className="mt-2">
@@ -204,10 +218,14 @@ export default function CheckoutPage() {
   const [preferences, setPreferences] = useState<Record<string, string>>({})
   const [newsletter, setNewsletter] = useState(false)
   const [agreePreorder, setAgreePreorder] = useState(false)
+  const [partialAllowed, setPartialAllowed] = useState<boolean | null>(null)
 
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
   const belowMinimum = subtotal < MIN_ORDER_CENTS
+  // Carts never mix channels (each product page only adds items tagged with its own
+  // channel) — the first item's channel represents the whole order.
+  const channel = products[items[0]?.[0]]?.channel
 
   useEffect(() => {
     if (items.length === 0) router.replace('/')
@@ -287,10 +305,15 @@ export default function CheckoutPage() {
       return
     }
 
-    if (!agreePreorder) {
+    if (channel === 'flash' && !agreePreorder) {
       setError(
         '請勾選同意預購條款 · Veuillez accepter les conditions de précommande',
       )
+      return
+    }
+
+    if (channel === 'flash' && partialAllowed === null) {
+      setError('請選擇缺貨時的處理方式 · Veuillez choisir une option en cas de rupture')
       return
     }
 
@@ -304,6 +327,8 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          channel,
+          partialAllowed: channel === 'flash' ? partialAllowed : undefined,
           cartItems: items.map(([id, qty]) => ({ id, qty, preference: preferences[id] })),
           customer: {
             prenom: firstName.trim(),
@@ -347,9 +372,18 @@ export default function CheckoutPage() {
           ← Retour · 返回
         </Link>
 
-        <h1 className="text-2xl font-bold text-midnight mb-8 tracking-tight">
-          結帳確認 · Récapitulatif
-        </h1>
+        <div className="flex items-center gap-3 mb-8">
+          <h1 className="text-2xl font-bold text-midnight tracking-tight">
+            結帳確認 · Récapitulatif
+          </h1>
+          {channel && (
+            <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
+              channel === 'flash' ? 'bg-magenta/10 text-magenta' : 'bg-midnight/8 text-midnight'
+            }`}>
+              {CHANNEL_LABEL[channel].zh} · {CHANNEL_LABEL[channel].fr}
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[1fr_280px] gap-6 items-start">
           {/* Form */}
@@ -531,22 +565,62 @@ export default function CheckoutPage() {
               </span>
             </label>
 
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreePreorder}
-                onChange={e => setAgreePreorder(e.target.checked)}
-                required
-                className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
-              />
-              <span className="text-xs text-midnight leading-relaxed">
-                我同意這是預購，並接受可能會沒買到，若沒買到全額退費 <span className="text-magenta">*</span>
-                <br />
-                <span className="text-midnight/55">
-                  J&apos;accepte qu&apos;il s&apos;agit d&apos;une précommande et d&apos;être remboursé(e) intégralement en cas de rupture.
+            {channel === 'flash' && (
+              <div>
+                <p className="text-xs text-midnight mb-3 leading-relaxed">
+                  若市場缺貨導致無法買齊 <span className="text-magenta">*</span>
+                  <br />
+                  <span className="text-midnight/55">
+                    En cas de rupture partielle chez le grossiste
+                  </span>
+                </p>
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setPartialAllowed(true)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-colors ${
+                      partialAllowed === true
+                        ? 'border-midnight bg-midnight/4'
+                        : 'border-midnight/15 hover:border-midnight/30 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-bold text-midnight">保留已購得的部分，未購得部分退費</p>
+                    <p className="text-xs text-midnight/55">Je garde ce qui a pu être acheté, remboursement du reste</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPartialAllowed(false)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-colors ${
+                      partialAllowed === false
+                        ? 'border-midnight bg-midnight/4'
+                        : 'border-midnight/15 hover:border-midnight/30 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-bold text-midnight">取消整筆訂單，全額退費</p>
+                    <p className="text-xs text-midnight/55">J&apos;annule la commande entière, remboursement intégral</p>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {channel === 'flash' && (
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreePreorder}
+                  onChange={e => setAgreePreorder(e.target.checked)}
+                  required
+                  className="mt-0.5 shrink-0 accent-yellow w-4 h-4"
+                />
+                <span className="text-xs text-midnight leading-relaxed">
+                  我同意這是預購，商品可能因市場因素缺貨 <span className="text-magenta">*</span>
+                  <br />
+                  <span className="text-midnight/55">
+                    J&apos;accepte qu&apos;il s&apos;agit d&apos;une précommande, sujette aux aléas d&apos;approvisionnement.
+                  </span>
                 </span>
-              </span>
-            </label>
+              </label>
+            )}
 
             {error && (
               <p className="text-sm text-midnight border border-magenta/30 bg-magenta/5 rounded-xl px-4 py-3">

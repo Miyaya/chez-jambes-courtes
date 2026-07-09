@@ -21,7 +21,7 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
 
   const { data: order } = await supabase
     .from('orders')
-    .select('order_number, customer_prenom, customer_nom, customer_email, items, subtotal, total_amount, payment_method, stripe_session_id, tracking_token, pickup_slots(label, location)')
+    .select('order_number, customer_prenom, customer_nom, customer_email, customer_phone, items, subtotal, discount_amount, total_amount, payment_method, stripe_session_id, tracking_token, created_at, pickup_slots(label, slot_at, location)')
     .eq('id', orderId)
     .single()
 
@@ -61,13 +61,21 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     const { error } = await supabase.rpc('restore_stock_for_order', { p_order_id: orderId })
     if (error) console.error('[order] restore_stock_for_order failed:', error)
   }
+
+  // Flip the "New" badge off — no-op if the customer never created an account
+  // (guest checkout doesn't have a row in `customers`).
+  if (status === 'complete' && order) {
+    await supabase.from('customers').update({ has_complete_order: true }).eq('email', order.customer_email)
+  }
+
   revalidatePath('/admin/commandes')
+  revalidatePath('/admin/clients')
 
   if (status !== 'validated' && status !== 'partial_validated' && status !== 'complete' && status !== 'canceled') return
   if (!order) return
 
   // @ts-expect-error — Supabase nested select returns object not array
-  const slot = order.pickup_slots as { label: string; location: string | null } | null
+  const slot = order.pickup_slots as { label: string; slot_at: string; location: string | null } | null
   const emailData = {
     order_number: order.order_number,
     customer_prenom: order.customer_prenom,
@@ -84,7 +92,15 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     if (status === 'validated' || status === 'partial_validated') {
       await sendReadyForPickupEmail(emailData)
     } else if (status === 'complete') {
-      await sendOrderCompleteEmail(emailData)
+      await sendOrderCompleteEmail({
+        ...emailData,
+        customer_phone: order.customer_phone,
+        discount_amount: order.discount_amount,
+        total_amount: order.total_amount,
+        payment_method: order.payment_method as 'stripe' | 'virement' | 'pay_on_pickup' | null,
+        created_at: order.created_at,
+        pickup_slot_at: slot?.slot_at ?? null,
+      })
     } else if (status === 'canceled' && cancelReason) {
       await sendOrderCanceledEmail({ ...emailData, cancel_reason: cancelReason })
     }

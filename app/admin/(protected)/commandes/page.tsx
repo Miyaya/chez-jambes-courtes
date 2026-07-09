@@ -17,20 +17,21 @@ export default async function CommandesAdminPage() {
       .limit(100),
     supabase
       .from('orders')
-      .select('customer_email'),
+      .select('customer_email, status'),
     supabase
       .from('products')
       .select('id, name_fr, name_tw, unit_label, unit_price, preference_options')
       .order('name_fr'),
   ])
 
-  const emailCount: Record<string, number> = {}
-  for (const o of allEmails ?? []) {
-    emailCount[o.customer_email] = (emailCount[o.customer_email] ?? 0) + 1
-  }
-  const firstTimeEmails = Object.entries(emailCount)
-    .filter(([, count]) => count === 1)
-    .map(([email]) => email)
+  // "New" = no completed order yet — same definition as the has_complete_order
+  // flag on `customers`, but derived straight from orders since guest checkouts
+  // don't always have a row in `customers`.
+  const completedEmails = new Set(
+    (allEmails ?? []).filter(o => o.status === 'complete').map(o => o.customer_email)
+  )
+  const allEmailsSeen = new Set((allEmails ?? []).map(o => o.customer_email))
+  const newEmails = Array.from(allEmailsSeen).filter(email => !completedEmails.has(email))
 
   return (
     <div>
@@ -43,7 +44,7 @@ export default async function CommandesAdminPage() {
 
       <CommandesTable
         orders={(orders ?? []) as unknown as Order[]}
-        firstTimeEmails={firstTimeEmails}
+        newEmails={newEmails}
         products={(products ?? []) as unknown as Product[]}
       />
     </div>

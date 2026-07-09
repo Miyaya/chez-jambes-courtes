@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/browser'
 
 export type CartProduct = {
   name_tw: string
@@ -9,6 +10,7 @@ export type CartProduct = {
   unit_label: string
   stock_quantity?: number | null
   preference_options?: string[]
+  channel: 'instock' | 'flash'
 }
 
 type CartContextType = {
@@ -59,6 +61,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart({})
     setProducts({})
   }
+
+  // Live stock counts for whatever's in the cart, so the checkout page (and cart
+  // panel) reflect stock changes too — same broadcast ShopClient listens to
+  // (see migration/07_stock_broadcast.sql), just applied to cart products instead
+  // of the full catalog. Only touches products already tracked in state, so a
+  // broadcast for a product never added to a cart is a no-op.
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel('products:stock')
+      .on('broadcast', { event: 'stock_update' }, ({ payload }) => {
+        setProducts(prev => {
+          if (!(payload.id in prev)) return prev
+          return { ...prev, [payload.id]: { ...prev[payload.id], stock_quantity: payload.stock_quantity } }
+        })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   return (
     <CartContext.Provider value={{
