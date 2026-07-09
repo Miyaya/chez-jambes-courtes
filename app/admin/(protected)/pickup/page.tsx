@@ -52,7 +52,7 @@ export default async function PickupAdminPage() {
       <div className="space-y-6">
         {(slots ?? []).map(slot => {
           const orders = (slot.orders ?? []) as {
-            order_number: string
+            order_number: string | null
             status: string
             subtotal: number
             tracking_token: string
@@ -121,7 +121,7 @@ export default async function PickupAdminPage() {
                         Array.isArray(order.items) ? order.items : []
 
                       return (
-                        <tr key={order.order_number} className={`${status === 'canceled' ? 'opacity-40' : ''} hover:bg-midnight/2 transition-colors`}>
+                        <tr key={order.tracking_token} className={`${status === 'canceled' ? 'opacity-40' : ''} hover:bg-midnight/2 transition-colors`}>
                           <td className="px-4 py-3">
                             <a
                               href={`/commande/${order.tracking_token}`}

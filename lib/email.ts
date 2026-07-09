@@ -18,7 +18,6 @@ type OrderItem = {
 }
 
 type OrderEmailData = {
-  order_number: string
   customer_prenom: string
   customer_nom: string
   customer_email: string
@@ -213,7 +212,7 @@ export async function sendPreorderReceivedEmail(
                 感謝您的訂購，${order.customer_prenom}！
               </p>
               <p style="margin:0 0 28px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,21,18,0.35);">
-                ${order.order_number}
+                ${order.tracking_token}
               </p>
 
               <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
@@ -230,7 +229,7 @@ export async function sendPreorderReceivedEmail(
 
   await sendBrandEmail(
     order.customer_email,
-    `Commande reçue ${order.order_number} · 訂單已收到（尚未完成）`,
+    `Commande reçue · 訂單已收到（尚未完成）`,
     bodyHtml,
     { bcc: ORDER_BCC },
   )
@@ -249,7 +248,7 @@ export async function sendInstockOrderReceivedEmail(order: OrderEmailData) {
                 我們已收到您的訂單，${order.customer_prenom}！
               </p>
               <p style="margin:0 0 28px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,21,18,0.35);">
-                ${order.order_number}
+                ${order.tracking_token}
               </p>
 
               <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
@@ -266,7 +265,7 @@ export async function sendInstockOrderReceivedEmail(order: OrderEmailData) {
 
   await sendBrandEmail(
     order.customer_email,
-    `Commande reçue ${order.order_number} · 訂單已收到`,
+    `Commande reçue · 訂單已收到`,
     bodyHtml,
     { bcc: ORDER_BCC },
   )
@@ -280,7 +279,7 @@ export async function sendReadyForPickupEmail(order: OrderEmailData) {
                 ${order.customer_prenom}，準備面交囉 🍊
               </p>
               <p style="margin:0 0 28px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,21,18,0.35);">
-                ${order.order_number}
+                ${order.tracking_token}
               </p>
 
               <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
@@ -297,13 +296,14 @@ export async function sendReadyForPickupEmail(order: OrderEmailData) {
 
   await sendBrandEmail(
     order.customer_email,
-    `Prêt pour le retrait ${order.order_number} · 請準備面交`,
+    `Prêt pour le retrait · 請準備面交`,
     bodyHtml,
   )
 }
 
 export async function sendOrderCompleteEmail(
   order: OrderEmailData & {
+    order_number: string
     customer_phone: string | null
     discount_amount: number
     total_amount: number
@@ -361,7 +361,7 @@ export async function sendOrderCanceledEmail(order: OrderEmailData & { cancel_re
                 訂單已取消
               </p>
               <p style="margin:0 0 28px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(26,21,18,0.35);">
-                ${order.order_number}
+                ${order.tracking_token}
               </p>
 
               <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
@@ -375,7 +375,7 @@ export async function sendOrderCanceledEmail(order: OrderEmailData & { cancel_re
 
   await sendBrandEmail(
     order.customer_email,
-    `Commande annulée ${order.order_number} · 訂單已取消`,
+    `Commande annulée · 訂單已取消`,
     bodyHtml,
     { accent: 'magenta' },
   )

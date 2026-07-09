@@ -67,7 +67,7 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<Uint8Arra
 
   const logoBytes = await readFile(path.join(process.cwd(), 'public', 'logo.png'))
   const logoImage = await pdfDoc.embedPng(logoBytes)
-  const logoHeight = 40
+  const logoHeight = 72
   const logoWidth = (logoImage.width / logoImage.height) * logoHeight
   page.drawImage(logoImage, {
     x: MARGIN,

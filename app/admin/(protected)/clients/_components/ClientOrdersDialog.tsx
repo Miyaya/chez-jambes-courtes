@@ -24,7 +24,7 @@ type ItemSnapshot = {
 
 type Order = {
   id: string
-  order_number: string
+  order_number: string | null
   status: OrderStatus
   created_at: string
   items: ItemSnapshot[]
@@ -123,7 +123,7 @@ export function ClientOrdersDialog({
                       className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-midnight/2 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="font-bold text-midnight text-sm shrink-0">{order.order_number}</span>
+                        <span className="font-bold text-midnight text-sm shrink-0">{order.order_number ?? '—'}</span>
                         <span className="text-xs text-midnight/35">
                           {new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>

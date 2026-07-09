@@ -81,12 +81,16 @@ export default async function CommandePage({ params }: Props) {
   // @ts-expect-error — Supabase nested select returns object not array
   const slot = order.pickup_slots as { label: string; location: string | null } | null
 
+  // order_number is only assigned once the order reaches 'complete' — before that,
+  // tracking_token is the only identifier available.
+  const displayRef = order.order_number ?? order.tracking_token
+
   return (
     <PageShell>
       {/* Order number + customer */}
       <div className="text-center mb-6 motion-safe:animate-[fade-up-in_500ms_cubic-bezier(0.16,1,0.3,1)_backwards]">
         <p className="text-xs uppercase tracking-widest text-midnight/40 mb-1">
-          #{order.order_number}
+          #{displayRef}
         </p>
         <h1 className="text-xl font-bold text-midnight tracking-tight">
           {order.customer_prenom} {order.customer_nom}
@@ -141,7 +145,7 @@ export default async function CommandePage({ params }: Props) {
 
       {status === 'received_preorder' && (
         <div className="rounded-xl border border-midnight/10 bg-midnight/5 px-4 py-3 mb-6 text-xs text-midnight/70 leading-relaxed motion-safe:animate-[fade-up-in_500ms_cubic-bezier(0.16,1,0.3,1)_140ms_backwards]">
-          訂單尚未成立，待買到芒果後會更新狀態並以電子郵件通知。沒有買到也會通知，免得你白跑一趟！！若有疑慮可以直接詢問 Line@ 帳號（訂單編號 {order.order_number}）
+          訂單尚未成立，待買到芒果後會更新狀態並以電子郵件通知。沒有買到也會通知，免得你白跑一趟！！若有疑慮可以直接詢問 Line@ 帳號（訂單編號 {displayRef}）
           <br />
           <span className="text-midnight/50">
             Cette commande n&apos;est pas encore définitivement confirmée. Dès que les mangues seront achetées, le statut sera mis à jour et vous serez averti(e) par e-mail — en cas de rupture aussi, pour vous éviter un déplacement inutile.

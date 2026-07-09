@@ -176,7 +176,7 @@ export async function POST(request: Request) {
     })
     .single()
 
-  const order = rpcData as { id: string; order_number: string; tracking_token: string } | null
+  const order = rpcData as { id: string; tracking_token: string } | null
 
   if (orderError || !order) {
     const match = orderError?.message.match(/insufficient_stock:([0-9a-f-]+)/i)
@@ -209,7 +209,6 @@ export async function POST(request: Request) {
       pickupSlotLocation = slot?.location ?? null
     }
     const emailData = {
-      order_number: order.order_number,
       customer_prenom: customer.prenom.trim(),
       customer_nom: customer.nom.trim(),
       customer_email: customer.email.trim().toLowerCase(),

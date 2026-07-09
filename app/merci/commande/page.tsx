@@ -83,7 +83,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
     const supabase = createAdminClient()
     const { data: order } = await supabase
       .from('orders')
-      .select('order_number, customer_prenom, customer_nom, items, subtotal, tracking_token, pickup_slots(label, location)')
+      .select('customer_prenom, customer_nom, items, subtotal, tracking_token, pickup_slots(label, location)')
       .eq('tracking_token', token)
       .single()
 
@@ -99,9 +99,6 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
           <h1 className="text-2xl font-bold text-midnight mb-1 text-center tracking-tight">
             Merci · 感謝您的訂購 !
           </h1>
-          <p className="text-sm text-center text-midnight/60 uppercase tracking-widest mb-6">
-            訂單編號 #{order?.order_number}
-          </p>
         </div>
 
         {items.length > 0 && (
@@ -150,9 +147,9 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
               <p><span className="font-bold">BIC</span> : {BANK_INFO.bic}</p>
               <p><span className="font-bold">Bénéficiaire</span> : {BANK_INFO.beneficiary}</p>
               <p><span className="font-bold">Banque</span> : {BANK_INFO.bank}</p>
-              {order?.order_number && (
+              {order?.tracking_token && (
                 <p>
-                  <span className="font-bold">Référence</span> : {order.order_number}
+                  <span className="font-bold">Référence</span> : {order.tracking_token}
                 </p>
               )}
               <p className="text-midnight/50 pt-1 leading-relaxed">
@@ -256,7 +253,7 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
   const { data: order } = orderId
     ? await supabase
         .from('orders')
-        .select('id, order_number, customer_prenom, customer_nom, customer_email, items, subtotal, status, confirmation_email_sent, tracking_token, pickup_slots(label, location)')
+        .select('id, customer_prenom, customer_nom, customer_email, items, subtotal, status, confirmation_email_sent, tracking_token, pickup_slots(label, location)')
         .eq('id', orderId)
         .single()
     : { data: null }
@@ -277,7 +274,6 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
       // @ts-expect-error — Supabase nested select returns object not array
       const slot = order.pickup_slots as { label: string; location: string | null } | null
       const emailData = {
-        order_number: order.order_number,
         customer_prenom: order.customer_prenom,
         customer_nom: order.customer_nom,
         customer_email: order.customer_email,
@@ -307,10 +303,6 @@ export default async function CommandeConfirmeePage({ searchParams }: Props) {
         <h1 className="text-2xl font-bold text-midnight mb-1 text-center tracking-tight">
           Merci · 感謝您的訂購 !
         </h1>
-
-        <p className="text-sm text-center text-midnight/60 uppercase tracking-widest mb-6">
-          訂單編號 #{order?.order_number}
-        </p>
       </div>
 
       {/* Items */}

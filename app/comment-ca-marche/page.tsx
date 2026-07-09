@@ -19,13 +19,48 @@ export default function CommentCaMarchePage() {
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
             <div className="pt-1.5 pb-6 w-full">
-              <h2 className="text-lg font-bold text-midnight mb-3">加入快閃 · La Vente Flash</h2>
+              <h2 className="text-lg font-bold text-midnight mb-3">限時預購開賣（傍晚開啟）· Les Précommandes Flash (En soirée)</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                每週固定開放限時快閃！在截止時間前，輕鬆在網站上挑選您喜愛的頂級鮮果並送出訂單。系統會立即發送訂單成立確認信至您的信箱。（此時 Stripe 僅會取得信用卡預先授權額度，尚未真正扣款喔！）
+                當我們確認翌日 Rungis 批發商的貨況後，網站便會於傍晚開啟僅限數小時的「限時預購」。
               </p>
               <p className="text-sm text-midnight/55 leading-relaxed">
-                Chaque semaine, on vous ouvre nos carnets de commandes ! Repérez la date limite, faites votre marché tranquillement sur le site et validez. Un e-mail de confirmation file direct dans votre boîte. (Note : une simple empreinte bancaire est prise sur Stripe, aucun vrai débit à ce stade !)
+                Dès que notre grossiste au Marché de Rungis nous confirme la disponibilité des stocks pour le lendemain, nous ouvrons une session de Précommande éphémère sur le site pour quelques heures.
               </p>
+
+              <ul className="space-y-3 mt-4">
+                <li>
+                  <p className="text-sm text-midnight font-medium leading-relaxed mb-1">
+                    <strong>依規格公平計價：</strong>針對單顆販售的鮮果（如芒果），您可在下單時預選您偏好的規格大小。
+                  </p>
+                  <p className="text-sm text-midnight/55 leading-relaxed">
+                    <strong>Le juste prix au calibre :</strong> Pour les fruits vendus à l&apos;unité (comme les mangues), vous pouvez sélectionner votre préférence de calibre lors de votre commande.
+                  </p>
+                </li>
+                <li>
+                  <p className="text-sm text-midnight font-medium leading-relaxed mb-1">
+                    <strong>信用卡額度預先授權：</strong>Stripe 此時僅會先取得最高可能金額（以最大規格計算）的信用卡預先授權（凍結額度），尚未真正扣款。
+                  </p>
+                  <p className="text-sm text-midnight/55 leading-relaxed">
+                    <strong>L&apos;empreinte bancaire :</strong> Une simple empreinte bancaire (pré-autorisation) est prise sur votre carte via Stripe pour le montant maximal (calibré sur le plus gros fruit). Aucun débit n&apos;est effectué à ce stade.
+                  </p>
+                </li>
+                <li>
+                  <p className="text-sm text-midnight font-medium leading-relaxed mb-1">
+                    <strong>其他付款管道：</strong>若選擇現場取貨以「感應刷卡」或「現金」支付，您的預約將直接鎖定。若選擇銀行轉帳，則僅接受「即時轉帳」以利在截止前成功對帳。
+                  </p>
+                  <p className="text-sm text-midnight/55 leading-relaxed">
+                    <strong>Autres paiements :</strong> Si vous choisissez le paiement par Carte sans contact ou Espèces au retrait, votre réservation est verrouillée. Si vous optez pour le Virement bancaire, seul le virement instantané est accepté avant la clôture de la session.
+                  </p>
+                </li>
+                <li>
+                  <p className="text-sm text-midnight font-medium leading-relaxed mb-1">
+                    <strong>缺貨應變選擇：</strong>於購物車結帳時，您可先預選若遇清晨突發缺貨時的應變方案：選擇「缺貨時仍出貨其餘商品」或「全額取消訂單」。
+                  </p>
+                  <p className="text-sm text-midnight/55 leading-relaxed">
+                    <strong>Sécurité anti-manque :</strong> Dès le panier, vous choisissez votre option de secours si un fruit venait à manquer : maintenir le reste de la commande ou tout annuler.
+                  </p>
+                </li>
+              </ul>
             </div>
           </li>
 
@@ -38,12 +73,12 @@ export default function CommentCaMarchePage() {
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
             <div className="pt-1.5 pb-6 w-full">
-              <h2 className="text-lg font-bold text-midnight mb-3">出發採購 · Le Coup de Feu à Rungis</h2>
+              <h2 className="text-lg font-bold text-midnight mb-3">統整訂單與清晨親自理貨 · La récolte des commandes &amp; Le tri à Rungis</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                快閃截止後，我們會於深夜親自前往 Rungis 國際市場。我們的任務？在合作批發商中，為您一箱箱親自嚴選、把關，只帶回品質最完美的頂級水果。
+                清晨時分（約 04:00），預購截止，我們便會親臨 Rungis 批發市場。我們將依據精確的預購總數進行採購，並帶回少量的安全庫存。在市場現場，我們會親自開箱、依據鮮果的實際重量與尺寸進行嚴格把關與手工分級，並盡全力滿足每位客戶預選的規格偏好。
               </p>
               <p className="text-sm text-midnight/55 leading-relaxed">
-                Dès la clôture des commandes, on enfile nos vestes et on file au Marché de Rungis au milieu de la nuit. Notre mission ? Dénicher et inspecter vos fruits un par un chez nos grossistes partenaires pour ne vous ramener que la crème de la crème.
+                Au petit matin (vers 04h00), nous clôturons la session et filons au Marché de Rungis. Nous achetons la quantité exacte pour honorer vos précommandes, agrémentée d&apos;un stock de sécurité raisonnable. Sur place, nous inspectons et trions physiquement chaque fruit par taille et par poids. Nous faisons le maximum pour attribuer à chacun le calibre de son choix.
               </p>
             </div>
           </li>
@@ -57,23 +92,13 @@ export default function CommentCaMarchePage() {
               <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
             <div className="pt-1.5 pb-6 w-full">
-              <h2 className="text-lg font-bold text-midnight mb-3">訂單確認與發票 · La Validation & La Facture</h2>
+              <h2 className="text-lg font-bold text-midnight mb-3">規格分級與訂單確認 · L&apos;Ajustement du prix &amp; La Validation</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                從市場採購完成後，系統會根據當天鮮果的實際到貨狀況更新訂單。此時系統才會依據最終實際採購金額進行扣款（絕無溢收風險），您也會同步收到內含官方正式發票的採購確認信！
+                清晨於市場理貨完畢後，系統將計算出最精確的最終總額：若您分配到的鮮果規格較小，系統將會自動調降該品項的價格。Stripe 線上刷卡將依據此調降後的「實際正確金額」直接進行最終扣款，確保您絕不會多付。若水果未達品管標準，系統將自動依您預選的應變方案執行。
               </p>
-              <p className="text-sm text-midnight/55 leading-relaxed mb-3">
-                De retour du marché, on valide vos paniers selon les arrivages réels du matin. C&apos;est à ce moment précis que votre paiement est ajusté et validé (zéro mauvaise surprise). Vous recevez alors votre e-mail récapitulatif final avec votre facture officielle !
+              <p className="text-sm text-midnight/55 leading-relaxed">
+                Au petit matin, une fois le tri terminé à Rungis, le juste prix de votre panier est calculé : si votre fruit est plus petit que le calibre maximal, son prix est automatiquement baissé. Votre paiement Stripe est immédiatement validé et encaissé sur ce montant exact réajusté. Si un fruit ne passe pas notre contrôle qualité, votre option de secours choisie au panier s&apos;applique.
               </p>
-
-              <div className="rounded-xl border border-midnight/10 bg-midnight/3 px-4 py-3">
-                <p className="text-sm font-bold text-midnight mb-1">📌 備註 · N.B.</p>
-                <p className="text-sm text-midnight leading-relaxed mb-1">
-                  別擔心！若您心儀的水果不幸遇到市場缺貨，您可以於下單時事先設定「若商品不全則全額取消訂單」。
-                </p>
-                <p className="text-sm text-midnight/50 leading-relaxed">
-                  Pas de panique, vous pouvez choisir à l&apos;avance lors de votre commande d&apos;annuler la totalité de votre panier si l&apos;un de vos fruits préférés venait à manquer chez le grossiste.
-                </p>
-              </div>
             </div>
           </li>
 
@@ -83,60 +108,37 @@ export default function CommentCaMarchePage() {
               <div className="w-10 h-10 rounded-full bg-midnight flex items-center justify-center shrink-0">
                 <span className="text-yellow text-xs font-bold tabular-nums">04</span>
               </div>
+              <div className="w-px flex-1 mt-3 bg-midnight/15" />
             </div>
             <div className="pt-1.5 pb-6 w-full">
-              <h2 className="text-lg font-bold text-midnight mb-3">取貨 · Le Retrait ou La Livraison</h2>
+              <h2 className="text-lg font-bold text-midnight mb-3">輕鬆取貨與發票 · Le Retrait, la Livraison &amp; La Facture</h2>
               <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
-                您的頂級鮮果到貨囉！您可以前往您下單時選擇的指定點輕鬆取貨，或是待在家中等待到府配送。
+                您前往指定點自取鮮果或在家等待到府配送。30 歐元以下且選擇現場付款的訂單，可於面交時以現金或感應刷卡支付。當商品順利交付完成後，系統將於最後這一步正式開立並發送官方「已付款發票」至您的電子信箱（您亦可隨時於後台下載）。
               </p>
-              <p className="text-sm text-midnight/55 leading-relaxed mb-3">
-                Vos fruits d&apos;exception sont arrivés ! Il ne vous reste plus qu&apos;à venir récupérer votre précieux colis au point de retrait sélectionné, ou à attendre notre tournée de livraison à domicile.
+              <p className="text-sm text-midnight/55 leading-relaxed">
+                Vous récupérez vos fruits d&apos;exception au point de retrait ou lors de notre tournée. Pour les paniers de moins de 30 € validés en paiement au retrait, vous réglez sur place en espèces ou en sans contact par carte. Une fois la remise des produits validée, votre facture officielle acquittée est instantanément éditée et envoyée par e-mail (elle est également disponible dans votre espace client).
               </p>
+            </div>
+          </li>
 
-              <div className="rounded-xl border border-midnight/10 bg-midnight/3 px-4 py-3">
-                <p className="text-sm font-bold text-midnight mb-1">配送小撇步 · Logistique Flash</p>
-                <p className="text-sm text-midnight leading-relaxed mb-1">
-                  為了確保極致新鮮並完美避開巴黎日間的尖峰車潮，我們的到府配送皆安排於深夜時段進行。讓您的頂級鮮果零壓力、安全送達！
-                </p>
-                <p className="text-sm text-midnight/50 leading-relaxed">
-                  Pour vous garantir une fraîcheur maximale et éviter les bouchons parisiens, nos livraisons à domicile s&apos;effectuent tard en soirée. Vos fruits arrivent à bon port sans stress !
-                </p>
+          {/* ── Step 05 ── */}
+          <li className="flex gap-6">
+            <div className="flex flex-col items-center shrink-0">
+              <div className="w-10 h-10 rounded-full bg-midnight flex items-center justify-center shrink-0">
+                <span className="text-yellow text-xs font-bold tabular-nums">05</span>
               </div>
+            </div>
+            <div className="pt-1.5 pb-6 w-full">
+              <h2 className="text-lg font-bold text-midnight mb-3">切換為現貨專區（直接購買）· Le Mode &quot;En Stock&quot; (Vente Directe)</h2>
+              <p className="text-sm text-midnight font-medium leading-relaxed mb-1.5">
+                在 Rungis 市場，所有水果皆為「整箱」販售（例如每箱固定 12 顆）。為了補足所有預購數量，我們需要買下整箱的鮮果，並會同時主動多採購部分數量。這些拆箱後的餘額鮮果以及補充庫存，隨後會立刻上架。此時網站會切換為「現貨」模式：現貨頁面會明確標示出各個精確規格的「實際剩餘數量」與價格，下單時即時線上全額扣款。現貨商品數量有限，須以最快速度完成取貨以確保最佳鮮度與風味！
+              </p>
+              <p className="text-sm text-midnight/55 leading-relaxed">
+                Au Marché de Rungis, les grossistes vendent exclusivement par colis complets (ex: cartons de 12 fruits). Pour honorer vos précommandes, nous achetons des colis complets et complétons volontairement notre approvisionnement avec quelques fruits supplémentaires. Le reliquat de ces colis ainsi que ce stock complémentaire basculent alors immédiatement sur le site. Notre site change de mode et passe &quot;En Stock&quot; : ici, plus de surprise, les fiches produits affichent le nombre exact de fruits disponibles pour chaque calibre précis, avec un débit immédiat à la commande. Ces produits sont à récupérer au plus vite pour préserver leur fraîcheur éclatante !
+              </p>
             </div>
           </li>
         </ol>
-
-        {/* Bonus: overflow "En Stock" deals */}
-        <div className="mt-10 rounded-2xl bg-midnight/5 border border-midnight/10 px-6 py-5 space-y-4">
-          <p className="text-xs text-midnight/50 uppercase tracking-widest font-bold">💡 現貨優惠專區 · Le Coin des Bonnes Affaires</p>
-
-          <div>
-            <p className="text-sm text-midnight leading-relaxed mb-1.5">
-              我們的商業模式 100% 建立在「限時快閃」上，以確保極致新鮮。然而，Rungis 的批發商只按「整箱」販售！舉例來說：當客戶總共下單了 37 顆芒果，我們就必須買下 4 整箱（共 48 顆）—— 這意味著會有 11 顆頂級芒果變成多餘的庫存。
-            </p>
-            <p className="text-sm text-midnight/55 leading-relaxed">
-              Notre modèle repose à 100 % sur le Flash pour vous garantir un circuit ultra-frais. Cependant, les grossistes à Rungis vendent uniquement par colis complets ! Si vous nous commandez 37 mangues, nous devons acheter 4 caisses de 12... et il nous reste 11 mangues d&apos;exception sur les bras.
-            </p>
-          </div>
-
-          <div className="border-t border-midnight/10 pt-4">
-            <p className="text-sm text-midnight leading-relaxed mb-1.5">
-              <strong>限時好康</strong>：為了惜食不浪費，這些多出來的鮮果會立即以「現貨優惠」形式上架網站，並附帶限時小折扣！
-            </p>
-            <p className="text-sm text-midnight/55 leading-relaxed">
-              <strong>La bonne affaire</strong> : ces fruits restants sont immédiatement basculés « En Stock » sur le site avec une petite remise sympa pour éviter tout gaspillage.
-            </p>
-          </div>
-
-          <div className="border-t border-midnight/10 pt-4">
-            <p className="text-sm text-midnight leading-relaxed mb-1.5">
-              <strong>購買規則</strong>：現貨商品於下單時即時扣款，且須以最快速度完成取貨以確保最佳風味。數量有限，先搶先贏！
-            </p>
-            <p className="text-sm text-midnight/55 leading-relaxed">
-              <strong>Le deal</strong> : le débit est immédiat à l&apos;achat et ces produits sont à récupérer au plus vite pour préserver leur fraîcheur. Premier arrivé, premier servi !
-            </p>
-          </div>
-        </div>
       </section>
 
       <Footer />

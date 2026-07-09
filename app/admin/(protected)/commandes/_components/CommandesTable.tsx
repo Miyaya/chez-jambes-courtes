@@ -49,7 +49,7 @@ export type Product = {
 
 export type Order = {
   id: string
-  order_number: string
+  order_number: string | null
   customer_prenom: string
   customer_nom: string
   customer_email: string
@@ -273,14 +273,11 @@ export function CommandesTable({
                       href={`/commande/${order.tracking_token}`}
                       className="font-bold text-midnight hover:underline underline-offset-2"
                     >
-                      {order.order_number}
-                    </Link>
-                    <p className="text-xs text-midnight/35 mt-0.5">
                       {new Date(order.created_at).toLocaleString('fr-FR', {
                         day: 'numeric', month: 'short', year: 'numeric',
                         hour: '2-digit', minute: '2-digit', second: '2-digit',
                       })}
-                    </p>
+                    </Link>
                   </td>
 
                   <td className="px-4 py-3">
@@ -325,7 +322,7 @@ export function CommandesTable({
                     <span className={`inline-block text-xs font-bold px-2 py-1 rounded-full ${s.color}`}>
                       {s.label}
                     </span>
-                    {order.payment_method === 'stripe' && (
+                    {order.payment_method === 'stripe' && order.status === 'received_preorder' && (
                       <div className="flex gap-1 mt-1.5">
                         <button
                           onClick={() => handleStripeAction(order.id, 'capture')}
@@ -407,13 +404,12 @@ export function CommandesTable({
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
                   <p className="text-xs uppercase tracking-[0.14em] text-midnight/40 mb-0.5">Commande</p>
-                  <h2 className="text-xl font-bold text-midnight">{openOrder.order_number}</h2>
-                  <p className="text-sm text-midnight/40 mt-0.5">
+                  <h2 className="text-xl font-bold text-midnight">
                     {new Date(openOrder.created_at).toLocaleString('fr-FR', {
                       day: 'numeric', month: 'long', year: 'numeric',
                       hour: '2-digit', minute: '2-digit', second: '2-digit',
                     })}
-                  </p>
+                  </h2>
                 </div>
                 <button
                   onClick={closeEditDialog}

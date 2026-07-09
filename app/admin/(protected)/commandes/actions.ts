@@ -21,15 +21,20 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
 
   const { data: order } = await supabase
     .from('orders')
-    .select('order_number, customer_prenom, customer_nom, customer_email, customer_phone, items, subtotal, discount_amount, total_amount, payment_method, stripe_session_id, tracking_token, created_at, pickup_slots(label, slot_at, location)')
+    .select('customer_prenom, customer_nom, customer_email, customer_phone, items, subtotal, discount_amount, total_amount, payment_method, stripe_session_id, tracking_token, created_at, pickup_slots(label, slot_at, location)')
     .eq('id', orderId)
     .single()
 
   // Preorder Stripe payments are pre-authorized only (capture_method: manual) —
-  // validating the order is what actually charges the customer. Capture happens
-  // before the status write so a Stripe failure blocks the status change instead
-  // of silently leaving an order marked "validated" with money never collected.
-  if ((status === 'validated' || status === 'partial_validated') && order?.payment_method === 'stripe' && order.stripe_session_id) {
+  // validating the order is what actually charges the customer, canceling releases
+  // the authorization (promised to customers as immediate in the CGV). Both happen
+  // before the status write so a Stripe failure blocks the status change instead of
+  // silently leaving the order in an inconsistent state (money never collected, or
+  // an authorization left dangling on a canceled order).
+  if (
+    (status === 'validated' || status === 'partial_validated' || status === 'canceled') &&
+    order?.payment_method === 'stripe' && order.stripe_session_id
+  ) {
     const stripe = getStripe()
     const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id)
     const paymentIntentId = typeof session.payment_intent === 'string'
@@ -38,7 +43,11 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     if (paymentIntentId) {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
       if (paymentIntent.status === 'requires_capture') {
-        await stripe.paymentIntents.capture(paymentIntentId, { amount_to_capture: order.total_amount })
+        if (status === 'canceled') {
+          await stripe.paymentIntents.cancel(paymentIntentId)
+        } else {
+          await stripe.paymentIntents.capture(paymentIntentId, { amount_to_capture: order.total_amount })
+        }
       }
     }
   }
@@ -55,8 +64,19 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
         .single()
     : { data: null }
 
+  // order_number is assigned by a DB trigger exactly when status flips to 'complete'
+  // (see migration/08_order_number_on_complete.sql) — must read it back from the
+  // update, not from the row fetched above, which predates the trigger firing.
+  let completedOrderNumber: string | null = null
   if (status !== 'canceled') {
-    await supabase.from('orders').update({ status }).eq('id', orderId)
+    const { data: updated, error: updateError } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId)
+      .select('order_number')
+      .single()
+    if (updateError) throw new Error(updateError.message)
+    completedOrderNumber = updated?.order_number ?? null
   } else if (canceled) {
     const { error } = await supabase.rpc('restore_stock_for_order', { p_order_id: orderId })
     if (error) console.error('[order] restore_stock_for_order failed:', error)
@@ -77,7 +97,6 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
   // @ts-expect-error — Supabase nested select returns object not array
   const slot = order.pickup_slots as { label: string; slot_at: string; location: string | null } | null
   const emailData = {
-    order_number: order.order_number,
     customer_prenom: order.customer_prenom,
     customer_nom: order.customer_nom,
     customer_email: order.customer_email,
@@ -91,9 +110,10 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
   try {
     if (status === 'validated' || status === 'partial_validated') {
       await sendReadyForPickupEmail(emailData)
-    } else if (status === 'complete') {
+    } else if (status === 'complete' && completedOrderNumber) {
       await sendOrderCompleteEmail({
         ...emailData,
+        order_number: completedOrderNumber,
         customer_phone: order.customer_phone,
         discount_amount: order.discount_amount,
         total_amount: order.total_amount,

@@ -200,14 +200,14 @@ export default async function ComptePage() {
                 // @ts-expect-error — Supabase nested select returns object not array
                 const slotLabel = order.pickup_slots?.label as string | undefined
                 return (
-                  <li key={order.order_number}>
+                  <li key={order.tracking_token}>
                     <Link
                       href={`/commande/${order.tracking_token}`}
                       className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-midnight/4 transition-colors group"
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-midnight group-hover:underline underline-offset-2">
-                          {order.order_number}
+                          {order.order_number ?? new Date(order.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                         {slotLabel && (
                           <p className="text-xs text-midnight/35 truncate">{slotLabel}</p>
