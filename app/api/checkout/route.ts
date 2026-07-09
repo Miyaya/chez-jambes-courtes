@@ -219,13 +219,19 @@ export async function POST(request: Request) {
       pickup_slot_location: pickupSlotLocation,
     }
 
-    const sendPromise = isPreorder
-      ? sendPreorderReceivedEmail({ ...emailData, payment_method: paymentMethod })
-      : sendInstockOrderReceivedEmail(emailData)
-
-    sendPromise
-      .then(() => supabase.from('orders').update({ confirmation_email_sent: true }).eq('id', order.id))
-      .catch(err => console.error('[email] order confirmation failed:', err))
+    // Must be awaited: on Cloudflare Workers, a fire-and-forget promise left running
+    // after the Response is returned can get torn down with the isolate before the
+    // Resend request ever completes — unlike a Node server, there's no guarantee the
+    // event loop keeps spinning post-response.
+    try {
+      const sendPromise = isPreorder
+        ? sendPreorderReceivedEmail({ ...emailData, payment_method: paymentMethod })
+        : sendInstockOrderReceivedEmail(emailData)
+      await sendPromise
+      await supabase.from('orders').update({ confirmation_email_sent: true }).eq('id', order.id)
+    } catch (err) {
+      console.error('[email] order confirmation failed:', err)
+    }
 
     return NextResponse.json({ token: order.tracking_token, method: paymentMethod })
   }

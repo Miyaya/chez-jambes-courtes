@@ -184,7 +184,11 @@ async function sendBrandEmail(
     attachments?: { filename: string; content: Buffer }[]
   } = {},
 ) {
-  await getResend().emails.send({
+  // resend-node v6 never throws on API-level failures (invalid_from_address,
+  // rate/quota limits, invalid attachment, ...) — it returns { data: null, error }
+  // instead, so callers relying on try/catch around a send*Email() call would
+  // otherwise never notice a failed send.
+  const { error } = await getResend().emails.send({
     from: process.env.RESEND_FROM ?? 'Chez Jambes Courtes <onboarding@resend.dev>',
     to,
     bcc: opts.bcc,
@@ -193,6 +197,7 @@ async function sendBrandEmail(
     html: renderEmailShell(bodyHtml, opts.accent),
     attachments: opts.attachments,
   })
+  if (error) throw new Error(`[resend] ${error.name}: ${error.message}`)
 }
 
 // sendInstockOrderReceivedEmail, sendPreorderReceivedEmail and sendOrderCompleteEmail

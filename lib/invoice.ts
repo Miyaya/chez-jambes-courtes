@@ -1,5 +1,4 @@
-import { readFile } from 'fs/promises'
-import path from 'path'
+import { getCloudflareContext } from '@opennextjs/cloudflare'
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 import { COMPANY_INFO } from './company-info'
 
@@ -65,7 +64,12 @@ export async function generateInvoicePdf(order: InvoiceOrder): Promise<Uint8Arra
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
   const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
-  const logoBytes = await readFile(path.join(process.cwd(), 'public', 'logo.png'))
+  // public/ is served by the Worker's ASSETS binding on Cloudflare, not a real
+  // filesystem — fs.readFile can't reach it there, so fetch it through ASSETS
+  // instead (initOpenNextCloudflareForDev wires this up locally too).
+  const { env } = await getCloudflareContext({ async: true })
+  const logoRes = await env.ASSETS.fetch(new URL('/logo.png', 'http://assets.local'))
+  const logoBytes = new Uint8Array(await logoRes.arrayBuffer())
   const logoImage = await pdfDoc.embedPng(logoBytes)
   const logoHeight = 72
   const logoWidth = (logoImage.width / logoImage.height) * logoHeight
