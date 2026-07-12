@@ -18,3 +18,12 @@ export async function createPickupSlotAction(formData: FormData) {
   await supabase.from('pickup_slots').insert({ label, slot_at, location, active })
   revalidatePath('/admin/pickup')
 }
+
+export async function updatePickupSlotActiveAction(slotId: string, active: boolean) {
+  await requireAdmin()
+
+  const supabase = createAdminClient()
+  const { error } = await supabase.from('pickup_slots').update({ active }).eq('id', slotId)
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin/pickup')
+}

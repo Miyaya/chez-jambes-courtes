@@ -130,8 +130,8 @@ export default function Nav({ activeChannel }: { activeChannel: ActiveChannel })
                   <p className="text-sm font-semibold tracking-[0.08em]">Comment ça marche</p>
                 </Link>
                 <Link href="/faq" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
+                  <p className="text-sm font-semibold tracking-[0.08em]">常見問題</p>
                   <p className="text-sm font-semibold tracking-[0.08em]">FAQ</p>
-                  <p className="text-sm font-semibold tracking-[0.08em]">Questions fréquentes</p>
                 </Link>
                 <Link href="/abonnement" onClick={() => setBurgerOpen(false)} className={`block px-4 py-2.5 transition-colors ${dropdownItem}`}>
                   <p className="text-sm font-semibold tracking-[0.08em]">訂閱電子報</p>
