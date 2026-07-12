@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="min-h-screen bg-midnight/5">
-      <nav className="bg-midnight text-white px-6 py-3 flex items-center gap-1">
+      <nav className="bg-midnight text-white px-6 py-3 flex items-center gap-1 overflow-x-auto">
         <NavLink href="/admin/commandes">Commandes</NavLink>
         <NavLink href="/admin/pickup">Pickup</NavLink>
         <NavLink href="/admin/produits">Produits</NavLink>
@@ -19,14 +19,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <NavLink href="/admin/reglages">Réglages</NavLink>
         <Link
           href="/"
-          className="ml-auto text-xs text-white/30 hover:text-white/60 transition-colors"
+          className="ml-auto shrink-0 whitespace-nowrap text-xs text-white/30 hover:text-white/60 transition-colors"
         >
           ← Site
         </Link>
-        <form action={logoutAction}>
+        <form action={logoutAction} className="shrink-0">
           <button
             type="submit"
-            className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="whitespace-nowrap text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             Déconnexion
           </button>
@@ -41,7 +41,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+      className="shrink-0 whitespace-nowrap text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
     >
       {children}
     </Link>

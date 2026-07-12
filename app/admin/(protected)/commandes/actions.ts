@@ -8,6 +8,7 @@ import { sendReadyForPickupEmail, sendOrderCompleteEmail, sendOrderCanceledEmail
 
 type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 type OrderFlag = 'shortage' | 'contact_needed' | 'postponed' | 'others' | 'no_show'
+type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup' | 'cash_on_pickup' | 'card_on_pickup'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -15,7 +16,7 @@ function getStripe() {
   })
 }
 
-export async function updateOrderStatusAction(orderId: string, status: OrderStatus, cancelReason?: string) {
+export async function updateOrderStatusAction(orderId: string, status: OrderStatus, cancelReason?: string, emailNote?: string) {
   await requireAdmin()
   const supabase = createAdminClient()
 
@@ -107,9 +108,11 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
     pickup_slot_location: slot?.location ?? null,
   }
 
+  const trimmedEmailNote = emailNote?.trim() || null
+
   try {
     if (status === 'validated' || status === 'partial_validated') {
-      await sendReadyForPickupEmail(emailData)
+      await sendReadyForPickupEmail({ ...emailData, admin_note: trimmedEmailNote })
     } else if (status === 'complete' && completedOrderNumber) {
       await sendOrderCompleteEmail({
         ...emailData,
@@ -117,9 +120,10 @@ export async function updateOrderStatusAction(orderId: string, status: OrderStat
         customer_phone: order.customer_phone,
         discount_amount: order.discount_amount,
         total_amount: order.total_amount,
-        payment_method: order.payment_method as 'stripe' | 'virement' | 'pay_on_pickup' | null,
+        payment_method: order.payment_method as PaymentMethod | null,
         created_at: order.created_at,
         pickup_slot_at: slot?.slot_at ?? null,
+        admin_note: trimmedEmailNote,
       })
     } else if (status === 'canceled' && cancelReason) {
       await sendOrderCanceledEmail({ ...emailData, cancel_reason: cancelReason })
@@ -134,6 +138,21 @@ export async function updateFlagAction(orderId: string, flag: OrderFlag | null) 
   const supabase = createAdminClient()
   await supabase.from('orders').update({ flag }).eq('id', orderId)
   revalidatePath('/admin/commandes')
+}
+
+export async function updatePaymentMethodAction(orderId: string, paymentMethod: PaymentMethod | null) {
+  await requireAdmin()
+  const supabase = createAdminClient()
+  await supabase.from('orders').update({ payment_method: paymentMethod }).eq('id', orderId)
+  revalidatePath('/admin/commandes')
+}
+
+export async function updatePickupSlotAction(orderId: string, pickupSlotId: string | null) {
+  await requireAdmin()
+  const supabase = createAdminClient()
+  await supabase.from('orders').update({ pickup_slot_id: pickupSlotId }).eq('id', orderId)
+  revalidatePath('/admin/commandes')
+  revalidatePath('/admin/pickup')
 }
 
 type OrderItem = {

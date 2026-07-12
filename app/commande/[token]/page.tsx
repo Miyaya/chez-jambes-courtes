@@ -20,6 +20,14 @@ function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
+const PAYMENT_LABEL: Record<string, { fr: string; zh: string }> = {
+  stripe:         { fr: 'Carte bancaire', zh: '線上刷卡' },
+  virement:       { fr: 'Virement bancaire', zh: '銀行轉帳' },
+  pay_on_pickup:  { fr: 'Sur place', zh: '現場付款' },
+  cash_on_pickup: { fr: 'Espèces au retrait', zh: '現場付現' },
+  card_on_pickup: { fr: 'Carte au retrait', zh: '現場刷卡' },
+}
+
 // received_instock never passes through validated/partial_validated — it goes straight
 // to complete. Once an order reaches complete/canceled we can't tell which flow it came
 // from, so those two are shown as a simple terminal badge instead of a step position.
@@ -44,7 +52,7 @@ export default async function CommandePage({ params }: Props) {
 
   const { data: order } = await supabase
     .from('orders')
-    .select('id, order_number, customer_prenom, customer_nom, items, subtotal, status, tracking_token, pickup_slots(label, location)')
+    .select('id, order_number, customer_prenom, customer_nom, items, subtotal, status, tracking_token, payment_method, pickup_slots(label, location)')
     .eq('tracking_token', token)
     .single()
 
@@ -177,12 +185,21 @@ export default async function CommandePage({ params }: Props) {
         ))}
       </div>
 
-      <div className="flex justify-between items-baseline border-t border-midnight/10 pt-3 mb-5 motion-safe:animate-[fade-up-in_500ms_cubic-bezier(0.16,1,0.3,1)_180ms_backwards]">
+      <div className="flex justify-between items-baseline border-t border-midnight/10 pt-3 mb-1.5 motion-safe:animate-[fade-up-in_500ms_cubic-bezier(0.16,1,0.3,1)_180ms_backwards]">
         <span className="text-sm font-bold text-midnight">總額 · Total</span>
         <span className="text-sm font-bold text-midnight tabular-nums">
           {centsToEur(order.subtotal)} €
         </span>
       </div>
+
+      {order.payment_method && (
+        <div className="flex justify-between items-baseline mb-5 motion-safe:animate-[fade-up-in_500ms_cubic-bezier(0.16,1,0.3,1)_180ms_backwards]">
+          <span className="text-xs text-midnight/50">付款方式 · Paiement</span>
+          <span className="text-xs font-semibold text-midnight/70">
+            {(PAYMENT_LABEL[order.payment_method]?.zh ?? order.payment_method)} · {(PAYMENT_LABEL[order.payment_method]?.fr ?? order.payment_method)}
+          </span>
+        </div>
+      )}
 
       {/* Pickup slot */}
       {slot && (

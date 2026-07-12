@@ -37,6 +37,7 @@ function isValidPhone(value: string): boolean {
 }
 
 const MIN_ORDER_CENTS = 1600
+const MAX_PAY_ON_PICKUP_CENTS = 5000
 
 const inputClass =
   'w-full rounded-xl border border-midnight/20 px-4 py-3 text-sm text-midnight placeholder-midnight/30 focus:outline-none focus:ring-2 focus:ring-midnight/30 bg-white'
@@ -223,6 +224,7 @@ export default function CheckoutPage() {
   const items = Object.entries(cart).filter(([, qty]) => qty > 0)
   const subtotal = items.reduce((sum, [id, qty]) => sum + (products[id]?.unit_price ?? 0) * qty, 0)
   const belowMinimum = subtotal < MIN_ORDER_CENTS
+  const payOnPickupDisabled = subtotal > MAX_PAY_ON_PICKUP_CENTS
   // Carts never mix channels (each product page only adds items tagged with its own
   // channel) — the first item's channel represents the whole order.
   const channel = products[items[0]?.[0]]?.channel
@@ -230,6 +232,10 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (items.length === 0) router.replace('/')
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (payOnPickupDisabled && paymentMethod === 'pay_on_pickup') setPaymentMethod('stripe')
+  }, [payOnPickupDisabled, paymentMethod])
 
   useEffect(() => {
     fetch('/api/customer/me')
@@ -496,14 +502,18 @@ export default function CheckoutPage() {
               <div className="space-y-2">
                 {PAYMENT_OPTIONS.map(opt => {
                   const selected = paymentMethod === opt.id
+                  const disabled = opt.id === 'pay_on_pickup' && payOnPickupDisabled
 
                   return (
                     <button
                       key={opt.id}
                       type="button"
+                      disabled={disabled}
                       onClick={() => setPaymentMethod(opt.id)}
                       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-colors ${
-                        selected
+                        disabled
+                          ? 'border-midnight/10 bg-midnight/4 cursor-not-allowed opacity-50'
+                          : selected
                           ? 'border-midnight bg-midnight/4'
                           : 'border-midnight/15 hover:border-midnight/30 bg-white'
                       }`}
@@ -513,9 +523,13 @@ export default function CheckoutPage() {
                         <p className="text-sm font-bold text-midnight">
                           {opt.labelZh} · {opt.label}
                         </p>
-                        <p className="text-xs text-midnight/75">{opt.description}</p>
+                        <p className="text-xs text-midnight/75">
+                          {disabled
+                            ? `訂單超過 ${centsToEur(MAX_PAY_ON_PICKUP_CENTS)}€ 恕不接受面交付款，請選擇線上刷卡或轉帳 · Indisponible au-delà de ${centsToEur(MAX_PAY_ON_PICKUP_CENTS)}€, veuillez choisir la carte ou le virement`
+                            : opt.description}
+                        </p>
                       </div>
-                      {selected && (
+                      {selected && !disabled && (
                         <span className="ml-auto shrink-0 w-4 h-4 rounded-full bg-midnight" />
                       )}
                     </button>

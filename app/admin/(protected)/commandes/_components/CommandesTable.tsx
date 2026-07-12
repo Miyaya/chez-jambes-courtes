@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useOptimistic } from 'react'
 import Link from 'next/link'
-import { updateOrderStatusAction, updateFlagAction, updateOrderItemsAction, captureStripePaymentAction, voidStripePaymentAction } from '../actions'
+import { updateOrderStatusAction, updateFlagAction, updatePaymentMethodAction, updatePickupSlotAction, updateOrderItemsAction, captureStripePaymentAction, voidStripePaymentAction } from '../actions'
 
 type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 type OrderFlag = 'shortage' | 'contact_needed' | 'postponed' | 'others' | 'no_show'
+type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup' | 'cash_on_pickup' | 'card_on_pickup'
 
 const STATUS: Record<OrderStatus, { label: string; color: string }> = {
   received_preorder: { label: 'Reçue (flash)',        color: 'bg-yellow/20 text-midnight' },
@@ -17,6 +18,13 @@ const STATUS: Record<OrderStatus, { label: string; color: string }> = {
 }
 const STATUS_OPTIONS: OrderStatus[] = ['received_preorder', 'received_instock', 'validated', 'partial_validated', 'complete', 'canceled']
 
+type CompletionFilter = 'all' | 'complete' | 'incomplete'
+const COMPLETION_FILTER_OPTIONS: { key: CompletionFilter; label: string }[] = [
+  { key: 'all',        label: 'toutes' },
+  { key: 'incomplete', label: 'incomplètes' },
+  { key: 'complete',   label: 'terminées' },
+]
+
 const FLAG: Record<OrderFlag, string> = {
   shortage:       '⚠️ Rupture',
   contact_needed: '📞 À contacter',
@@ -25,6 +33,17 @@ const FLAG: Record<OrderFlag, string> = {
   no_show:        '🚫 No-show',
 }
 const FLAG_OPTIONS: OrderFlag[] = ['shortage', 'contact_needed', 'postponed', 'others', 'no_show']
+
+const PAYMENT_METHOD: Record<string, { label: string; emoji: string }> = {
+  stripe:         { label: 'Stripe',              emoji: '💳' },
+  virement:       { label: 'Virement',            emoji: '🏦' },
+  cash_on_pickup: { label: 'Espèces', emoji: '💶' },
+  card_on_pickup: { label: 'Carte Bancaire (Tap to Pay)',   emoji: '🏦' },
+  pay_on_pickup:  { label: 'Sur place',           emoji: '🤝' },
+}
+// Legacy value from before cash/card were tracked separately — no longer assignable,
+// but still shown as an option so existing orders don't silently lose their value.
+const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['virement', 'stripe', 'cash_on_pickup', 'card_on_pickup']
 
 type ItemSnapshot = {
   product_id: string
@@ -47,6 +66,13 @@ export type Product = {
   preference_options: string[]
 }
 
+export type PickupSlot = {
+  id: string
+  label: string
+  location: string | null
+  active: boolean
+}
+
 export type Order = {
   id: string
   order_number: string | null
@@ -54,6 +80,7 @@ export type Order = {
   customer_nom: string
   customer_email: string
   customer_phone: string | null
+  line_username: string | null
   status: OrderStatus
   flag: OrderFlag | null
   subtotal: number
@@ -64,7 +91,8 @@ export type Order = {
   note: string | null
   cancel_reason: string | null
   items: ItemSnapshot[]
-  payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
+  payment_method: PaymentMethod | null
+  pickup_slot_id: string | null
   pickup_slots: { label: string; location: string | null } | null
 }
 
@@ -76,19 +104,25 @@ export function CommandesTable({
   orders,
   newEmails,
   products,
+  pickupSlots,
 }: {
   orders: Order[]
   newEmails: string[]
   products: Product[]
+  pickupSlots: PickupSlot[]
 }) {
   const newEmailSet = new Set(newEmails)
+  const [completionFilter, setCompletionFilter] = useState<CompletionFilter>('all')
   const [toastMsg, setToastMsg] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
   const [toastError, setToastError] = useState(false)
   const [openOrderId, setOpenOrderId] = useState<string | null>(null)
   const [draftStatus, setDraftStatus] = useState<OrderStatus | null>(null)
+  const [draftPaymentMethod, setDraftPaymentMethod] = useState<PaymentMethod | null>(null)
+  const [draftPickupSlotId, setDraftPickupSlotId] = useState<string | null>(null)
   const [draftCancelReason, setDraftCancelReason] = useState('')
   const [cancelReasonError, setCancelReasonError] = useState(false)
+  const [draftEmailNote, setDraftEmailNote] = useState('')
   const [draftItems, setDraftItems] = useState<ItemSnapshot[]>([])
   const [saving, setSaving] = useState(false)
   const [stripeLoading, setStripeLoading] = useState<Record<string, 'capture' | 'void'>>({})
@@ -98,7 +132,16 @@ export function CommandesTable({
     orders,
     (
       state,
-      update: { id: string; status?: OrderStatus; flag?: OrderFlag | null; items?: ItemSnapshot[]; subtotal?: number },
+      update: {
+        id: string
+        status?: OrderStatus
+        flag?: OrderFlag | null
+        payment_method?: PaymentMethod | null
+        pickup_slot_id?: string | null
+        pickup_slots?: { label: string; location: string | null } | null
+        items?: ItemSnapshot[]
+        subtotal?: number
+      },
     ) =>
       state.map(o => {
         if (o.id !== update.id) return o
@@ -131,8 +174,11 @@ export function CommandesTable({
   function openEditDialog(order: Order) {
     setOpenOrderId(order.id)
     setDraftStatus(order.status)
+    setDraftPaymentMethod(order.payment_method)
+    setDraftPickupSlotId(order.pickup_slot_id)
     setDraftCancelReason(order.cancel_reason ?? '')
     setCancelReasonError(false)
+    setDraftEmailNote('')
     setDraftItems(order.items.map(item => ({ ...item })))
   }
 
@@ -199,9 +245,11 @@ export function CommandesTable({
     }
 
     const statusChanged = draftStatus !== openOrder.status
+    const paymentMethodChanged = draftPaymentMethod !== openOrder.payment_method
+    const pickupSlotChanged = draftPickupSlotId !== openOrder.pickup_slot_id
     const itemsChanged = JSON.stringify(draftItems) !== JSON.stringify(openOrder.items)
 
-    if (!statusChanged && !itemsChanged) {
+    if (!statusChanged && !paymentMethodChanged && !pickupSlotChanged && !itemsChanged) {
       closeEditDialog()
       return
     }
@@ -209,8 +257,22 @@ export function CommandesTable({
     setSaving(true)
     startTransition(async () => {
       try {
-        const optimisticUpdate: { id: string; status?: OrderStatus; items?: ItemSnapshot[]; subtotal?: number } = { id: openOrder.id }
+        const optimisticUpdate: {
+          id: string
+          status?: OrderStatus
+          payment_method?: PaymentMethod | null
+          pickup_slot_id?: string | null
+          pickup_slots?: { label: string; location: string | null } | null
+          items?: ItemSnapshot[]
+          subtotal?: number
+        } = { id: openOrder.id }
         if (statusChanged) optimisticUpdate.status = draftStatus
+        if (paymentMethodChanged) optimisticUpdate.payment_method = draftPaymentMethod
+        if (pickupSlotChanged) {
+          optimisticUpdate.pickup_slot_id = draftPickupSlotId
+          const slot = pickupSlots.find(s => s.id === draftPickupSlotId)
+          optimisticUpdate.pickup_slots = slot ? { label: slot.label, location: slot.location } : null
+        }
         if (itemsChanged) {
           optimisticUpdate.items = draftItems
           optimisticUpdate.subtotal = draftItems.reduce((sum, item) => sum + item.line_total, 0)
@@ -218,11 +280,16 @@ export function CommandesTable({
         updateOptimistic(optimisticUpdate)
 
         if (itemsChanged) await updateOrderItemsAction(openOrder.id, draftItems)
+        if (paymentMethodChanged) await updatePaymentMethodAction(openOrder.id, draftPaymentMethod)
+        if (pickupSlotChanged) await updatePickupSlotAction(openOrder.id, draftPickupSlotId)
         if (statusChanged) {
           await updateOrderStatusAction(
             openOrder.id,
             draftStatus,
             draftStatus === 'canceled' ? draftCancelReason.trim() : undefined,
+            draftStatus === 'validated' || draftStatus === 'partial_validated' || draftStatus === 'complete'
+              ? draftEmailNote.trim()
+              : undefined,
           )
         }
         showToast(statusChanged ? 'Enregistré · e-mail envoyé' : 'Enregistré')
@@ -238,8 +305,30 @@ export function CommandesTable({
   const openOrder = openOrderId ? optimisticOrders.find(o => o.id === openOrderId) : null
   const draftSubtotal = draftItems.reduce((sum, item) => sum + item.line_total, 0)
 
+  const filteredOrders = optimisticOrders.filter(o => {
+    if (completionFilter === 'complete') return o.status === 'complete'
+    if (completionFilter === 'incomplete') return o.status !== 'complete'
+    return true
+  })
+
   return (
     <>
+      <div className="flex gap-2 mb-4">
+        {COMPLETION_FILTER_OPTIONS.map(opt => (
+          <button
+            key={opt.key}
+            onClick={() => setCompletionFilter(opt.key)}
+            className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border transition-colors ${
+              completionFilter === opt.key
+                ? 'bg-midnight text-yellow border-midnight'
+                : 'text-midnight/50 border-midnight/15 hover:border-midnight/30 hover:text-midnight'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div className="bg-white rounded-2xl border border-midnight/8 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -255,14 +344,14 @@ export function CommandesTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-midnight/5">
-            {optimisticOrders.length === 0 && (
+            {filteredOrders.length === 0 && (
               <tr>
                 <td colSpan={8} className="px-4 py-10 text-center text-sm text-midnight/35">
                   Aucune commande.
                 </td>
               </tr>
             )}
-            {optimisticOrders.map(order => {
+            {filteredOrders.map(order => {
               const s = STATUS[order.status] ?? STATUS.received_preorder
               const isNew = newEmailSet.has(order.customer_email)
 
@@ -288,10 +377,18 @@ export function CommandesTable({
                         </span>
                       )}
                       <p className="font-medium text-midnight">{order.customer_prenom} {order.customer_nom}</p>
+                      {order.line_username && (
+                        <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green/15 text-dark-green leading-none">
+                          {order.line_username}
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-midnight/40">{order.customer_email}</p>
                     {order.customer_phone && (
                       <p className="text-xs text-midnight/40">{order.customer_phone}</p>
+                    )}
+                    {order.note && (
+                      <p className="text-xs text-orange mt-0.5 italic">⚠ {order.note}</p>
                     )}
                   </td>
 
@@ -304,16 +401,11 @@ export function CommandesTable({
                   </td>
 
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {order.payment_method === 'stripe' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-midnight/6 text-midnight/70">💳 Stripe</span>
-                    )}
-                    {order.payment_method === 'virement' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-midnight/6 text-midnight/70">🏦 Virement</span>
-                    )}
-                    {order.payment_method === 'pay_on_pickup' && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-midnight/6 text-midnight/70">🤝 Face</span>
-                    )}
-                    {!order.payment_method && (
+                    {order.payment_method ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-midnight/6 text-midnight/70">
+                        {PAYMENT_METHOD[order.payment_method].emoji} {PAYMENT_METHOD[order.payment_method].label}
+                      </span>
+                    ) : (
                       <span className="text-xs text-midnight/30">—</span>
                     )}
                   </td>
@@ -456,6 +548,38 @@ export function CommandesTable({
                     )}
                   </div>
                 )}
+
+                {(draftStatus === 'validated' || draftStatus === 'partial_validated' || draftStatus === 'complete') && (
+                  <div className="mt-3">
+                    <textarea
+                      value={draftEmailNote}
+                      onChange={e => setDraftEmailNote(e.target.value)}
+                      rows={2}
+                      placeholder="Note pour l'e-mail (optionnel) · 給買家的信件備註"
+                      className="w-full text-sm px-3 py-2 rounded-xl border border-midnight/15 resize-none focus:outline-none focus:ring-2 focus:ring-midnight/20"
+                    />
+                    <p className="text-xs text-midnight/35 mt-1">
+                      Ce message sera inclus dans l&apos;e-mail envoyé au client — il n&apos;est pas enregistré.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs uppercase tracking-wider text-midnight/40 mb-1.5">Paiement</label>
+                <select
+                  value={draftPaymentMethod ?? ''}
+                  onChange={e => setDraftPaymentMethod((e.target.value || null) as PaymentMethod | null)}
+                  className="w-full text-sm font-bold px-3 py-2 rounded-xl border border-midnight/15 cursor-pointer focus:outline-none focus:ring-2 focus:ring-midnight/20 bg-white text-midnight"
+                >
+                  <option value="">—</option>
+                  {draftPaymentMethod === 'pay_on_pickup' && (
+                    <option value="pay_on_pickup">{PAYMENT_METHOD.pay_on_pickup.emoji} {PAYMENT_METHOD.pay_on_pickup.label}</option>
+                  )}
+                  {PAYMENT_METHOD_OPTIONS.map(opt => (
+                    <option key={opt} value={opt}>{PAYMENT_METHOD[opt].emoji} {PAYMENT_METHOD[opt].label}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="bg-midnight/4 rounded-xl p-4 mb-4">
@@ -467,15 +591,30 @@ export function CommandesTable({
                 )}
               </div>
 
-              {openOrder.pickup_slots && (
-                <div className="bg-yellow/15 rounded-xl p-4 mb-4">
-                  <p className="text-xs uppercase tracking-wider text-midnight/40 mb-1">Créneau de retrait</p>
-                  <p className="font-bold text-midnight text-sm">{openOrder.pickup_slots.label}</p>
-                  {openOrder.pickup_slots.location && (
-                    <p className="text-xs text-midnight/50 mt-0.5">{openOrder.pickup_slots.location}</p>
+              <div className="mb-4">
+                <label className="block text-xs uppercase tracking-wider text-midnight/40 mb-1.5">Créneau de retrait</label>
+                <select
+                  value={draftPickupSlotId ?? ''}
+                  onChange={e => setDraftPickupSlotId(e.target.value || null)}
+                  className="w-full text-sm font-bold px-3 py-2 rounded-xl border border-midnight/15 cursor-pointer focus:outline-none focus:ring-2 focus:ring-midnight/20 bg-white text-midnight"
+                >
+                  <option value="">—</option>
+                  {openOrder.pickup_slot_id && !pickupSlots.some(s => s.id === openOrder.pickup_slot_id) && openOrder.pickup_slots && (
+                    <option value={openOrder.pickup_slot_id}>{openOrder.pickup_slots.label} (fermé)</option>
                   )}
-                </div>
-              )}
+                  {pickupSlots.map(slot => (
+                    <option key={slot.id} value={slot.id}>{slot.label}{slot.active ? '' : ' (fermé)'}</option>
+                  ))}
+                </select>
+                {(() => {
+                  const selectedSlot = draftPickupSlotId === openOrder.pickup_slot_id
+                    ? openOrder.pickup_slots
+                    : pickupSlots.find(s => s.id === draftPickupSlotId) ?? null
+                  return selectedSlot?.location ? (
+                    <p className="text-xs text-midnight/35 mt-1.5">{selectedSlot.location}</p>
+                  ) : null
+                })()}
+              </div>
 
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-3">

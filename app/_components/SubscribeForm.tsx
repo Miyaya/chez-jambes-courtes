@@ -10,7 +10,7 @@ const inputClass =
 const labelClass =
   'block text-[0.72rem] uppercase tracking-[0.12em] text-midnight/60 mb-1.5 font-medium'
 
-export default function SubscribeForm() {
+export default function SubscribeForm({ source = 'manual' }: { source?: 'prelaunch' | 'checkout' | 'manual' }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -35,7 +35,7 @@ export default function SubscribeForm() {
     setLoading(true)
     setServerError(null)
 
-    const result = await subscribeAction(email, name)
+    const result = await subscribeAction(email, name, source)
 
     if (result.data === 'subscribed') {
       router.push('/merci')

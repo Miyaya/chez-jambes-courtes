@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPreorderReceivedEmail, sendInstockOrderReceivedEmail } from '@/lib/email'
 
 type PaymentMethod = 'stripe' | 'virement' | 'pay_on_pickup'
+const MAX_PAY_ON_PICKUP_CENTS = 5000
 type Channel = 'instock' | 'flash'
 type CartItem = { id: string; qty: number; preference?: string }
 type Customer = {
@@ -154,6 +155,12 @@ export async function POST(request: Request) {
 
   const subtotal = itemsSnapshot.reduce((sum, i) => sum + i.line_total, 0)
   const paymentMethod: PaymentMethod = customer.payment_method ?? 'stripe'
+
+  if (paymentMethod === 'pay_on_pickup' && subtotal > MAX_PAY_ON_PICKUP_CENTS)
+    return NextResponse.json(
+      { error: `Paiement à la livraison indisponible au-delà de ${(MAX_PAY_ON_PICKUP_CENTS / 100).toFixed(2)}€ · 訂單超過 ${(MAX_PAY_ON_PICKUP_CENTS / 100).toFixed(2)}€ 恕不接受面交付款` },
+      { status: 400 },
+    )
 
   // create_order_with_stock reserves stock (row-locked, per product) and inserts the
   // order in one transaction — the earlier stock_quantity check above is only an

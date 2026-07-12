@@ -21,14 +21,16 @@ export type InvoiceOrder = {
   subtotal: number
   discount_amount: number
   total_amount: number
-  payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
+  payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | 'cash_on_pickup' | 'card_on_pickup' | null
   pickup_slots?: { slot_at: string; location: string | null } | null
 }
 
 const PAYMENT_LABEL: Record<string, string> = {
-  stripe: 'Carte bancaire (Stripe)',
+  stripe: 'Carte Bancaire (Stripe)',
   virement: 'Virement bancaire',
-  pay_on_pickup: 'Espèces au retrait',
+  pay_on_pickup: 'Payé au retrait',
+  cash_on_pickup: 'Espèces au retrait',
+  card_on_pickup: 'Carte Bancaire',
 }
 
 function centsToEur(cents: number) {

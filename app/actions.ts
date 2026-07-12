@@ -13,7 +13,7 @@ type SubscribeResult =
 export async function subscribeAction(
   email: string,
   name: string,
-  source: 'prelaunch' | 'checkout' = 'prelaunch',
+  source: 'prelaunch' | 'checkout' | 'manual' = 'manual',
 ): Promise<SubscribeResult> {
   const supabase = createServerClient()
 

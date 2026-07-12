@@ -2,8 +2,8 @@
 // confirmation page, and in the preorder-received email. Single source so the
 // three surfaces never drift out of sync.
 export const BANK_INFO = {
-  iban: 'FR76 3083 3830 0007 4170 1921 987',
-  bic: 'FNOMFRP2',
+  iban: 'FR76 1732 8844 0076 1295 9775 952',
+  bic: 'SWNBFR22',
   beneficiary: 'Yi-Hsuan LEE EI',
-  bank: 'FINOM PAYMENTS',
+  bank: 'SWAN',
 }

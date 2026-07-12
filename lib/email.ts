@@ -32,6 +32,24 @@ function centsToEur(cents: number) {
   return (cents / 100).toFixed(2)
 }
 
+function escapeHtml(text: string) {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+// Admin-authored freeform note, optionally attached to the "ready for pickup"
+// and "order complete" emails — not persisted anywhere, just relayed into
+// that one send.
+function buildAdminNoteBlock(note?: string | null) {
+  if (!note) return ''
+  return `
+              <div style="margin:0 0 20px;padding:14px 16px;background:rgba(250,202,49,0.15);border-radius:2px;">
+                <p style="margin:0;font-size:13px;color:#1A1512;line-height:1.6;white-space:pre-wrap;">註：${escapeHtml(note)}</p>
+              </div>`
+}
+
 function buildItemRows(items: OrderItem[]) {
   return items
     .map(
@@ -278,7 +296,7 @@ export async function sendInstockOrderReceivedEmail(order: OrderEmailData) {
 
 // Sent when a pre-order/flash order gets validated or partially validated
 // after the market trip.
-export async function sendReadyForPickupEmail(order: OrderEmailData) {
+export async function sendReadyForPickupEmail(order: OrderEmailData & { admin_note?: string | null }) {
   const bodyHtml = `
               <p style="margin:0 0 6px;font-size:24px;color:#1A1512;line-height:1.3;">
                 ${order.customer_prenom}，準備面交囉 🍊
@@ -296,6 +314,7 @@ export async function sendReadyForPickupEmail(order: OrderEmailData) {
                 Votre commande est prête. Merci de venir au créneau et au lieu convenus — nous sommes une toute petite équipe, merci de votre compréhension.
               </p>
 
+              ${buildAdminNoteBlock(order.admin_note)}
               ${buildOrderSummaryTable(order, buildPickupBlock(order.pickup_slot_label, order.pickup_slot_location))}
               ${buildTrackingCta(trackingUrlFor(order.tracking_token))}`
 
@@ -312,9 +331,10 @@ export async function sendOrderCompleteEmail(
     customer_phone: string | null
     discount_amount: number
     total_amount: number
-    payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | null
+    payment_method: 'stripe' | 'virement' | 'pay_on_pickup' | 'cash_on_pickup' | 'card_on_pickup' | null
     created_at: string
     pickup_slot_at?: string | null
+    admin_note?: string | null
   },
 ) {
   const bodyHtml = `
@@ -330,6 +350,7 @@ export async function sendOrderCompleteEmail(
 
               <hr style="border:none;border-top:1px solid rgba(26,21,18,0.1);margin:0 0 20px;" />
 
+              ${buildAdminNoteBlock(order.admin_note)}
               ${buildOrderSummaryTable(order)}`
 
   const invoicePdf = await generateInvoicePdf({
@@ -399,14 +420,13 @@ export async function sendWelcomeEmail(to: string, name?: string | null) {
 
               <p style="margin:0 0 16px;font-size:15px;color:#1A1512;line-height:1.7;opacity:0.85;">
                 Votre inscription est bien enregistrée.
-                Vous serez parmi les premiers à savoir dès la première livraison —
+                Vous serez parmi les premiers informés dès notre premier arrivage :
                 mangues de Taïwan, litchis parfumés et pitayas rouges.
               </p>
 
               <p style="margin:0 0 32px;font-size:13px;color:#1A1512;line-height:1.7;opacity:0.75;">
                 ${greetingZh}！<br />
-                您的訂閱已成功建立。<br />
-                台灣芒果、荔枝、紅火龍果——第一批到貨時，我們會立即通知您。
+                您的訂閱已成功建立。當台灣芒果、荔枝與紅火龍果的第一批鮮果空運抵達時，我們將第一時間通知您！
               </p>
 
               <hr style="border:none;border-top:1px dashed rgba(26,21,18,0.12);margin:0 0 28px;" />
