@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useOptimistic } from 'react'
 import { updatePickupSlotActiveAction } from '../actions'
+import { ModifierCreneauDialog, type PurchaseTripOption } from './ModifierCreneauDialog'
 
 type OrderStatus = 'received_preorder' | 'received_instock' | 'validated' | 'partial_validated' | 'complete' | 'canceled'
 
@@ -33,13 +34,25 @@ type Order = {
   payment_method: string | null
 }
 
+type LinkedTrip = {
+  id: string
+  purchase_date: string
+  note: string | null
+}
+
 export type PickupSlot = {
   id: string
   label: string
   slot_at: string
   location: string | null
   active: boolean
+  purchase_trips: LinkedTrip | null
   orders: Order[]
+}
+
+function fmtTripDate(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 type SlotFilter = 'active' | 'all'
@@ -55,7 +68,7 @@ function formatSlotDate(slot_at: string) {
   })
 }
 
-export function PickupSlotsView({ slots }: { slots: PickupSlot[] }) {
+export function PickupSlotsView({ slots, purchaseTrips }: { slots: PickupSlot[]; purchaseTrips: PurchaseTripOption[] }) {
   const [filter, setFilter] = useState<SlotFilter>('active')
   const [toastMsg, setToastMsg] = useState('')
   const [toastVisible, setToastVisible] = useState(false)
@@ -131,6 +144,11 @@ export function PickupSlotsView({ slots }: { slots: PickupSlot[] }) {
                     <p className="text-xs text-midnight/35 mt-0.5">
                       {formatSlotDate(slot.slot_at)}
                     </p>
+                    {slot.purchase_trips && (
+                      <p className="text-xs text-midnight/35 mt-0.5">
+                        🛒 Achat du {fmtTripDate(slot.purchase_trips.purchase_date)}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-midnight tabular-nums">{centsToEur(total)} €</p>
@@ -236,10 +254,12 @@ export function PickupSlotsView({ slots }: { slots: PickupSlot[] }) {
                 <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-midnight/35">Créneau</th>
                 <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-midnight/35">Lieu</th>
                 <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-midnight/35">Date</th>
+                <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-midnight/35">Achat lié</th>
+                <th className="px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-midnight/5">
-              {optimisticSlots.map(slot => (
+              {[...optimisticSlots].sort((a, b) => b.slot_at.localeCompare(a.slot_at)).map(slot => (
                 <tr key={slot.id} className="hover:bg-midnight/2 transition-colors">
                   <td className="px-4 py-3">
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -256,6 +276,12 @@ export function PickupSlotsView({ slots }: { slots: PickupSlot[] }) {
                   <td className="px-4 py-3 font-bold text-midnight">{slot.label}</td>
                   <td className="px-4 py-3 text-xs text-midnight/40">{slot.location ?? '—'}</td>
                   <td className="px-4 py-3 text-xs text-midnight/35">{formatSlotDate(slot.slot_at)}</td>
+                  <td className="px-4 py-3 text-xs text-midnight/40">
+                    {slot.purchase_trips ? fmtTripDate(slot.purchase_trips.purchase_date) : '—'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <ModifierCreneauDialog slot={slot} purchaseTrips={purchaseTrips} />
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -2,6 +2,7 @@ import { requireAdmin } from '@/lib/admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { deletePurchaseTripAction } from './actions'
 import { NouvelAchatDialog } from './_components/NouvelAchatDialog'
+import { AchatSlotsDialog } from './_components/AchatSlotsDialog'
 
 export const metadata = { title: 'Achats — Admin' }
 
@@ -14,10 +15,16 @@ export default async function AchatsAdminPage() {
   await requireAdmin()
 
   const admin = createAdminClient()
-  const { data: trips } = await admin
-    .from('purchase_trips')
-    .select('id, purchase_date, note, created_at')
-    .order('purchase_date', { ascending: false })
+  const [{ data: trips }, { data: slots }] = await Promise.all([
+    admin
+      .from('purchase_trips')
+      .select('id, purchase_date, note, created_at')
+      .order('purchase_date', { ascending: false }),
+    admin
+      .from('pickup_slots')
+      .select('id, label, slot_at, location, purchase_trip_id')
+      .order('slot_at', { ascending: false }),
+  ])
 
   return (
     <div>
@@ -35,6 +42,7 @@ export default async function AchatsAdminPage() {
             <tr className="border-b border-midnight/8 text-left">
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Date d&apos;achat</th>
               <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Note</th>
+              <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-midnight/40">Créneaux liés</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
@@ -56,6 +64,13 @@ export default async function AchatsAdminPage() {
                 </td>
                 <td className="px-4 py-3 text-sm text-midnight/60 max-w-xs">
                   {trip.note ?? <span className="text-midnight/25">—</span>}
+                </td>
+                <td className="px-4 py-3 max-w-xs">
+                  <AchatSlotsDialog
+                    tripId={trip.id}
+                    tripLabel={fmt(trip.purchase_date)}
+                    slots={slots ?? []}
+                  />
                 </td>
                 <td className="px-4 py-3 text-right">
                   <form>

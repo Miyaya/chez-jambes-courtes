@@ -3,7 +3,18 @@
 import { useRef, useState } from 'react'
 import { createPickupSlotAction } from '../actions'
 
-export function NouveauCreneauDialog() {
+type PurchaseTrip = {
+  id: string
+  purchase_date: string
+  note: string | null
+}
+
+function fmtTripDate(dateStr: string) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+export function NouveauCreneauDialog({ purchaseTrips }: { purchaseTrips: PurchaseTrip[] }) {
   const [open, setOpen] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -98,6 +109,24 @@ export function NouveauCreneauDialog() {
                     placeholder="Optionnel"
                     className="w-full text-sm text-midnight border border-midnight/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-midnight/20 placeholder:text-midnight/25"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-midnight/50 uppercase tracking-wider mb-1">
+                    Achat lié
+                  </label>
+                  <select
+                    name="purchase_trip_id"
+                    defaultValue=""
+                    className="w-full text-sm text-midnight border border-midnight/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-midnight/20"
+                  >
+                    <option value="">Aucun</option>
+                    {purchaseTrips.map(trip => (
+                      <option key={trip.id} value={trip.id}>
+                        {fmtTripDate(trip.purchase_date)}{trip.note ? ` — ${trip.note}` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="flex items-center justify-between py-1">

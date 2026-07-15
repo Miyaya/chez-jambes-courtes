@@ -17,7 +17,7 @@ export default function MentionsLegalesPage() {
             <div>
               <h2 className="font-bold text-midnight mb-2">Éditeur du site</h2>
               <p className="mb-3">
-                L&apos;édition et la direction de la publication du site <em className="italic">Chez Jambes Courtes</em> sont assurées par Mme Yi-Hsuan LECLERE, agissant sous le statut d&apos;Entrepreneur Individuel (EI).
+                L&apos;édition et la direction de la publication du site <em className="italic">Chez Jambes Courtes</em> sont assurées par Mme Yi-Hsuan LEE, agissant sous le statut d&apos;Entrepreneur Individuel (EI).
               </p>
               <ul className="list-none space-y-1.5">
                 <li className="flex gap-2"><span className="shrink-0 text-midnight/40">—</span><span><strong>Nom commercial</strong> : CHEZ JAMBES COURTES</span></li>
@@ -46,7 +46,7 @@ export default function MentionsLegalesPage() {
             <div>
               <h2 className="font-bold text-midnight/85 mb-2">網站營運方資訊</h2>
               <p className="mb-3">
-                本網站 <em className="italic">Chez Jambes Courtes</em> 之管理與內容出版，由 Yi-Hsuan LECLERE 以獨立獨資企業（Entrepreneur Individuel, EI）身份合法營運。
+                本網站 <em className="italic">Chez Jambes Courtes</em> 之管理與內容出版，由 Yi-Hsuan LEE 以獨立獨資企業（Entrepreneur Individuel, EI）身份合法營運。
               </p>
               <ul className="list-none space-y-1.5">
                 <li className="flex gap-2"><span className="shrink-0 text-midnight/30">—</span><span><strong>商業名稱</strong>：CHEZ JAMBES COURTES</span></li>

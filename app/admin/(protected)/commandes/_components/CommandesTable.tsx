@@ -18,11 +18,12 @@ const STATUS: Record<OrderStatus, { label: string; color: string }> = {
 }
 const STATUS_OPTIONS: OrderStatus[] = ['received_preorder', 'received_instock', 'validated', 'partial_validated', 'complete', 'canceled']
 
-type CompletionFilter = 'all' | 'complete' | 'incomplete'
+type CompletionFilter = 'in_progress' | 'all' | 'complete' | 'canceled'
 const COMPLETION_FILTER_OPTIONS: { key: CompletionFilter; label: string }[] = [
-  { key: 'all',        label: 'toutes' },
-  { key: 'incomplete', label: 'incomplètes' },
-  { key: 'complete',   label: 'terminées' },
+  { key: 'in_progress', label: 'en cours' },
+  { key: 'all',         label: 'toutes' },
+  { key: 'complete',    label: 'terminées' },
+  { key: 'canceled',    label: 'annulées' },
 ]
 
 const FLAG: Record<OrderFlag, string> = {
@@ -307,7 +308,8 @@ export function CommandesTable({
 
   const filteredOrders = optimisticOrders.filter(o => {
     if (completionFilter === 'complete') return o.status === 'complete'
-    if (completionFilter === 'incomplete') return o.status !== 'complete'
+    if (completionFilter === 'canceled') return o.status === 'canceled'
+    if (completionFilter === 'in_progress') return o.status !== 'complete' && o.status !== 'canceled'
     return true
   })
 
